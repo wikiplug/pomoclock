@@ -1,4 +1,5 @@
 #include "header.h"
+#include "button.h"
 
 bool button_2;
 bool pomoSwitch;
@@ -8,18 +9,20 @@ bool selectButton;
 bool selectButtonRead;
 byte menuPosition;
 
+button button_1(3); 
+
 void setup(){
 
 }
 
 void loop(){
-    pomodoro();
+   // pomodoro();
 }
 
 // EN ESTA FUNCIÓN SE CORROBORA SI SE ACTIVA LA OPCION POMODORO O NO
 // A SU VEZ, EJECUTA TODAS LAS FUNCIONES QUE CORREN DENTRO DEL POMODORO
 // SE SEGMENTA EL CODIGO EN BLOQUES PARA FACILITAR SU LEGIBILIDAD Y PROGRAMACION
-void pomodoro(){ 
+/* void pomodoro(){ 
     pomoSwitchRead = digitalRead(pomoSwitch);
     
     if(pomoSwitchRead == HIGH){
@@ -65,3 +68,5 @@ void select_work(){
     lcd.setCursor(0, 1);
     lcd.print(WORK_TIME);
 }
+*/
+
