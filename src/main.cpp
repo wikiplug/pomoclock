@@ -1,5 +1,6 @@
 #include "header.h"
 #include "button.h"
+#include "multitask.h"
 
 bool button_2;
 bool pomoSwitch;
@@ -10,19 +11,26 @@ bool selectButtonRead;
 byte menuPosition;
 
 button button_1(3); 
+multitask multitask_1(1000);
 
+int num;  // borrar
 void setup(){
-
+    Serial.begin(115200); 
 }
 
 void loop(){
-   // pomodoro();
+    // pomodoro();
+
+    if(multitask_1.getState()){
+        num++; 
+        Serial.println(num); 
+    }
 }
 
 // EN ESTA FUNCIÓN SE CORROBORA SI SE ACTIVA LA OPCION POMODORO O NO
 // A SU VEZ, EJECUTA TODAS LAS FUNCIONES QUE CORREN DENTRO DEL POMODORO
 // SE SEGMENTA EL CODIGO EN BLOQUES PARA FACILITAR SU LEGIBILIDAD Y PROGRAMACION
-void pomodoro(){ 
+     void pomodoro(){ 
     pomoSwitchRead = digitalRead(pomoSwitch);
     
     if(pomoSwitchRead == HIGH){
@@ -69,3 +77,4 @@ void select_work(){
     lcd.print(WORK_TIME);
 }
 
+*/ 
