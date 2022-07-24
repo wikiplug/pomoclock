@@ -1,16 +1,18 @@
 #include <Arduino.h>
 #include "multitask.h"
 
-/*  LA FUNCIÓN OBTIENE COMO ARGUMENTO AL TIEMPO QUE QUEREMOS DE DELAY   */
-multitask::multitask(long time){
+/* CREAMOS EL OBJETO */
+multitask::multitask(){
+}
+/* INICIALIZAMOS EL OBJETO USANDO AL TIEMPO */ 
+void multitask::init(long time){
     _time = time; 
 }
 
 /*  LA FUNCIÓN PONE EN TRUE O FALSE A LA VARIABLE TIME STATE DEPENDIENDO 
     DE SI EL TIEMPO TRANSCURRIDO ES EL MISMO AL TIEMPO SETEADO COMO DELAY   */
 void multitask::countTime(){
-    _TA = millis();
-    if((_TA - _TP) >= _time){
+    if((millis() - _TP) >= _time){
         _timeState = true;
         _TP = millis();
     }

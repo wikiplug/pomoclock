@@ -6,29 +6,29 @@ TwiLiquidCrystal lcd(0x27);
 
 #define pomoSwitch 16
 bool pomoSwitchRead;
-bool startPomo = LOW;
+byte startPomo = LOW;
 bool selectButton;
 bool selectButtonRead;
 byte menuPosition;
 int workTime; 
 int breakTime;
 
-button button_1(13, 50);
-button button_2(14, 50);
-button button_1Long(13, 50); 
+button button_1(13, 150);
+button button_2(14, 150);
 
 
 
  
-multitask multitaskMenuPosition(1000);
+multitask multitaskMenuPosition;
 
 void setup(){
     Serial.begin(115200); 
+    lcd.begin(16, 2);      //Iniciamos el lcd
+    lcd.backlight();       //Encendemos la luz de fondo
+    lcd.clear();           //Limpiamos la pantalla
 }
 
 void loop(){
-    lcd.setCursor(0 , 0);
-    lcd.print("hola"); 
     pomodoro();
 }
 
@@ -72,15 +72,13 @@ void pomo_menu(){
 void select_work(){
 //  SI ESTOY EN POS. WORK: WORK PARPADEA Y ME PERMITE INCREMENTAR, SI SUPERA 9999MIN VUELVE A 0
     if(menuPosition == 0){ 
+        multitaskMenuPosition.init(500); 
         if(multitaskMenuPosition.delay()){
             lcd.setCursor(0, 0);
             lcd.print("    ");
         }
         if(button_1.getState()){
             workTime++;         
-        }
-        if(button_1Long.getState()){
-            workTime = workTime + 5;
         }
         if(workTime > 9999){
             lcd.setCursor(0, 1);

@@ -1,5 +1,5 @@
-/*#ifndef blinkMenu
-#define blinkMenu
+#ifndef blinkMenu_h
+#define blinkMenu_h
 #include <Arduino.h>
 
 class blinkMenu
@@ -7,9 +7,7 @@ class blinkMenu
     private:
         byte 
     public:
+        
+}; 
 
-};
-
-#endif
-
-*/ 
+#endif 

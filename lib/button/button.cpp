@@ -1,24 +1,30 @@
-#include <Arduino.h>
 #include "button.h"
+#include "multitask.h"  
 
 /*  LA FUNCIÓN BUTTON TIENE COMO ARGUMENTO AL PIN AL QUE CONECTAMOS AL PULSADOR
     Y AL DEBOUNCE DELAY. DENTRO DE LA FUNCION DECLARAMOS AL PIN COMO: INPUT */
+    
 button::button(byte pin, int debounceDelay){
     _pin = pin;    
-    _debounceDelay = debounceDelay;
+    _debounceDelay = debounceDelay; 
     pinMode(_pin, INPUT); 
 }
 
 /*  LA FUNCIÓN BUTTON ACTUALIZA EL ESTADO DEL PULSADOR SI ES APRETADO POR UN TIEMPO MAYOR AL DEBOUNCE DELAY */ 
 void button::updateState(){
     int reading = digitalRead(_pin);
-    if(reading != _lastButtonState){
-        _lastDobounceTime = millis();
+    multitaskButton.init(_debounceDelay);
+    if(reading == HIGH){
+        if(multitaskButton.delay()){
+            _buttonState = reading;
+        }
+        else{
+            _buttonState = LOW; 
+        }
+    }  
+    else{
+        _buttonState = LOW;
     }
-    if((millis() - _lastDobounceTime) > _debounceDelay){
-        _buttonState = reading; 
-    }
-    _lastButtonState = reading;  
 }
 /*  OBTENEMOS EL ESTADO DEL PULSADOR EN BASE A LA FUNCIÓN UPDATE STATE */ 
 int button::getState(){

@@ -9,11 +9,11 @@ class multitask{
     private:
         long _time; 
         int _timeState;
-        long _TA; 
         long _TP; 
-
+        
     public: 
-        multitask(long time);
+        multitask();
+        void init(long time); 
         void countTime(); 
         int delay(); 
 }; 
