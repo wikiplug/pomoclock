@@ -15,7 +15,7 @@ class multitask{
     public: 
         multitask(long time);
         void countTime(); 
-        int getState(); 
+        int delay(); 
 }; 
 
 #endif

@@ -2,9 +2,10 @@
 #include "button.h"
 
 /*  LA FUNCIÓN BUTTON TIENE COMO ARGUMENTO AL PIN AL QUE CONECTAMOS AL PULSADOR
-    DENTRO DE LA FUNCION DECLARAMOS AL PIN COMO: INPUT */
-button::button(byte pin){
+    Y AL DEBOUNCE DELAY. DENTRO DE LA FUNCION DECLARAMOS AL PIN COMO: INPUT */
+button::button(byte pin, int debounceDelay){
     _pin = pin;    
+    _debounceDelay = debounceDelay;
     pinMode(_pin, INPUT); 
 }
 
