@@ -1,6 +1,7 @@
 #include "header.h"
 #include "button.h"
 #include "multitask.h"
+#include "blinkMenu.h"
 
 TwiLiquidCrystal lcd(0x27);
 
@@ -15,7 +16,7 @@ int breakTime;
 
 button button_1(13, 150);
 button button_2(14, 150);
-
+blinkMenu blinkMenu1; 
 
 
  
@@ -72,11 +73,10 @@ void pomo_menu(){
 void select_work(){
 //  SI ESTOY EN POS. WORK: WORK PARPADEA Y ME PERMITE INCREMENTAR, SI SUPERA 9999MIN VUELVE A 0
     if(menuPosition == 0){ 
-        multitaskMenuPosition.init(500); 
-        if(multitaskMenuPosition.delay()){
-            lcd.setCursor(0, 0);
-            lcd.print("    ");
-        }
+        blinkMenu1.alternate("WORK", "    ", 750); 
+        lcd.setCursor(0, 0);
+        lcd.print(blinkMenu1.getWord()); 
+        
         if(button_1.getState()){
             workTime++;         
         }
@@ -87,9 +87,6 @@ void select_work(){
             workTime = 0;
         }
     }
-    lcd.setCursor(0, 0);
-    lcd.print("WORK");
-
     lcd.setCursor(0, 1);
     lcd.print(workTime);
 }
