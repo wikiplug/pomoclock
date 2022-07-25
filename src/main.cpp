@@ -1,9 +1,6 @@
 #include "header.h"
-#include "button.h"
-#include "multitask.h"
-#include "blinkMenu.h"
+#include "objects.h"
 
-TwiLiquidCrystal lcd(0x27);
 
 #define pomoSwitch 16
 bool pomoSwitchRead;
@@ -13,14 +10,6 @@ bool selectButtonRead;
 byte menuPosition;
 int workTime; 
 int breakTime;
-
-button button_1(13, 150);
-button button_2(14, 150);
-blinkMenu blinkMenu1; 
-
-
- 
-multitask multitaskMenuPosition;
 
 void setup(){
     Serial.begin(115200); 
@@ -54,14 +43,17 @@ void pomodoro(){
 }
 
 void pomo_menu(){
-    if(button_2.getState()){
+    if(button_3.getState()){
         menuPosition++;
     } 
     if(menuPosition > 3){
         menuPosition = 0;
     }
+
+    if(menuPosition == 0){
+        select_work();
+    }
     
-    select_work();    
     select_shortBreak();
     select_longBreak();
     select_sessionsLongBreak();
@@ -69,27 +61,43 @@ void pomo_menu(){
     select_start();
 
 }
-
+ //  SI ESTOY EN POS. WORK: WORK PARPADEA Y ME PERMITE INCREMENTAR, SI SUPERA 9999MIN VUELVE A 0
 void select_work(){
-//  SI ESTOY EN POS. WORK: WORK PARPADEA Y ME PERMITE INCREMENTAR, SI SUPERA 9999MIN VUELVE A 0
-    if(menuPosition == 0){ 
-        blinkMenu1.alternate("WORK", "    ", 750); 
-        lcd.setCursor(0, 0);
-        lcd.print(blinkMenu1.getWord()); 
-        
-        if(button_1.getState()){
-            workTime++;         
-        }
-        if(workTime > 9999){
-            lcd.setCursor(0, 1);
-            lcd.println("MAX!");
-            delay(1000);
-            workTime = 0;
-        }
-    }
+    blinkMenu1.alternate("WORK", "    ", 750); 
+    lcd.setCursor(0, 0);
+    lcd.print(blinkMenu1.getWord()); 
+    
+    workTime = incrementador();
     lcd.setCursor(0, 1);
-    lcd.print(workTime);
+    lcd.print(workTime);  
 }
+
+int incrementador(){
+        static int n;
+        if(button_1.getState()){
+            n++;
+        }
+        if(button_2.getState()){
+            n--; 
+        }
+        if(n > 9999 || n < 0){
+            n = 0;
+        }
+        return n; 
+} 
+/*void select_work(){
+     
+    if(menuPosition == 0){
+        libMenuSelectWork.display(0, "WORK", "    ", 0); 
+        libMenuSelectWork.displayPrint(); 
+        workTime = libMenuSelectWork.varInc; 
+        
+        lcd.setCursor(4, 0);
+        lcd.print("ShBr LgBr ");
+
+    }
+}
+*/ 
 
 /* void select_shortBreak(){
 

@@ -1,9 +1,13 @@
 #include <Arduino.h>
 #include <SPI.h>
-#include <Wire.h>		// incluye libreria para interfaz I2C
-#include <RTClib.h>		// incluye libreria para el manejo del modulo RTC
+#include <Wire.h>		
+#include <RTClib.h>		
 #include <TwiLiquidCrystal.h>
 
+//LIBRERIAS LOCALES
+#include "button.h"
+#include "multitask.h"
+#include "blinkMenu.h"
 
 void pomodoro();
 void pomo_menu();
@@ -13,3 +17,5 @@ void select_longBreak();
 void select_sessionsLongBreak();
 void select_sessions();
 void select_start();
+
+int incrementador(); 
