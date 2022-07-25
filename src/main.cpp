@@ -65,25 +65,31 @@ void pomo_menu(){
 void select_work(){
     blinkMenu1.alternate("WORK", "    ", 750); 
     lcd.setCursor(0, 0);
-    lcd.print(blinkMenu1.getWord()); 
-    
+    lcd.print(blinkMenu1.getWord());   
+
     workTime = incrementador();
     lcd.setCursor(0, 1);
-    lcd.print(workTime);  
+    lcd.print(workTime);   
 }
 
 int incrementador(){
-        static int n;
-        if(button_1.getState()){
-            n++;
-        }
-        if(button_2.getState()){
-            n--; 
-        }
-        if(n > 9999 || n < 0){
-            n = 0;
-        }
-        return n; 
+    static int n;
+    static int k; 
+    if(button_1.getState()){
+        n = n + 5;
+    }
+    if(button_2.getState()){
+        n = n - 5; 
+    }
+    if(n > 9999 || n < 0){
+        lcd.clear(); 
+        n = 0;
+    }
+    if((n == 5 && k == 10)|| (n == 95 && k == 100) || (n == 995 && k == 1000)){
+        lcd.clear(); 
+    }
+    k = n; 
+    return n; 
 } 
 /*void select_work(){
      
