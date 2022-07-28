@@ -15,7 +15,7 @@ void blinkMenu::updateState(){
     multitaskBlinkMenu.init(_time); 
     if(multitaskBlinkMenu.delay()){
         _inc++; 
-        if(_inc > 254){
+        if(_inc > 100){
             _inc = 0;
         }
     }

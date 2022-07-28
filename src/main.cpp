@@ -1,7 +1,6 @@
 #include "header.h"
 #include "objects.h"
 
-
 #define pomoSwitch 16
 bool pomoSwitchRead;
 byte startPomo = LOW;
@@ -54,71 +53,43 @@ void pomo_menu(){
         select_work();
     }
     
-    select_shortBreak();
+    if(menuPosition == 1){
+        select_shortBreak();
+    }
     select_longBreak();
     select_sessionsLongBreak();
     select_sessions();
     select_start();
 
 }
- //  SI ESTOY EN POS. WORK: WORK PARPADEA Y ME PERMITE INCREMENTAR, SI SUPERA 9999MIN VUELVE A 0
+
 void select_work(){
-    blinkMenu1.alternate("WORK", "    ", 750); 
+    // INGRESAMOS LA PALABRA DE LA OPCIÓN DEL MENÚ EN LA QUE ESTAMOS, LA LIBRERIA
+    // VA A HACER QUE PARPADEE CADA 1 SEG, IMPRIMIMOS ESA PALABRA EN EL DISPLAY.
+    blinkMenu1.alternate("WORK", "    ", 1000); 
     lcd.setCursor(0, 0);
     lcd.print(blinkMenu1.getWord());   
 
-    workTime = incrementador();
+    // INCREMENTAMOS/DECREMENTAMOS Y LEEMOS EL VALOR DE "WORK TIME" DEPENDIENDO DE QUE PULSADOR SE PRESIONE
+    incLibWorkTime.incThisVar(workTime); 
+    
+    // REALIZAMOS UN LCD CLEAR DEPENDIENDO DE SI LA VARIABLE PASA DE UNIDADES A DECENAS, CENTENAS, ETC. 
+    if(incLibWorkTime.lcdValue()){
+        lcd.clear(); 
+    }
+    // IMPRIMIMOS TODO EL RESTO DEL MENÚ.
     lcd.setCursor(0, 1);
-    lcd.print(workTime);   
+    lcd.print(incLibWorkTime.varValue());   
+
 }
 
-int incrementador(){
-    static int n;
-    static int k; 
-    if(button_1.getState()){
-        n = n + 5;
-    }
-    if(button_2.getState()){
-        n = n - 5; 
-    }
-    if(n > 9999 || n < 0){
-        lcd.clear(); 
-        n = 0;
-    }
-    if((n == 5 && k == 10)|| (n == 95 && k == 100) || (n == 995 && k == 1000)){
-        lcd.clear(); 
-    }
-    k = n; 
-    return n; 
-} 
-/*void select_work(){
-     
-    if(menuPosition == 0){
-        libMenuSelectWork.display(0, "WORK", "    ", 0); 
-        libMenuSelectWork.displayPrint(); 
-        workTime = libMenuSelectWork.varInc; 
-        
-        lcd.setCursor(4, 0);
-        lcd.print("ShBr LgBr ");
 
-    }
+void select_shortBreak(){
+
+
+    
 }
-*/ 
 
-/* void select_shortBreak(){
-
-    if(menuPosition == 1){
-        if(multitaskMenuPosition.delay()){
-            lcd.setCursor(5, 0);
-            lcd.print("     "); 
-        }
-        if(button_1.getState()){
-            breakTime++;
-        }
-    }
-}
-*/
-void select_shortBreak(){}
 void select_longBreak(){}
 void select_sessionsLongBreak(){}
 void select_sessions(){}
