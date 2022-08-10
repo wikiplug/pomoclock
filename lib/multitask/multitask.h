@@ -10,11 +10,10 @@ class multitask{
         long _time; 
         int _timeState;
         long _TP; 
-        
+        void countTime();
     public: 
         multitask();
         void init(long time); 
-        void countTime(); 
         int delay(); 
 }; 
 

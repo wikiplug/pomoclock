@@ -4,13 +4,15 @@
 blinkMenu::blinkMenu(){
 
 }
-
+// OBTIENE LOS PARAMETROS Y LOS COPIA EN VARIABLES DE CARACTER PRIVADO
+// ES DECIR, NO SON ACCESIBLES EN LA PROGRAMACIÓN DEL MAIN.
 void blinkMenu::alternate(char firstWord [30], char secondWord [30], int time){
     strncpy(_firstWord, firstWord, sizeof(_firstWord)); 
     strncpy(_secondWord, secondWord, sizeof(_secondWord));  
     _time = time; 
 }   
 
+// ALTERNA ENTRE LAS DOS PALABRAS EN BASE AL TIEMPO SELECCIONADO
 void blinkMenu::updateState(){
     multitaskBlinkMenu.init(_time); 
     if(multitaskBlinkMenu.delay()){
@@ -20,7 +22,7 @@ void blinkMenu::updateState(){
         }
     }
     _div = _inc % 2;
-    if(_div == 0){
+    if(_div != 0){
         strncpy(_word, _firstWord, sizeof(_word));   
     } 
     else{
@@ -28,6 +30,7 @@ void blinkMenu::updateState(){
     }
 }
 
+// RETORNA LA PALABRA QUE NOS ENTREGA LA FUNCION updateState. 
 char* blinkMenu::getWord(){
     updateState(); 
     return _word; 

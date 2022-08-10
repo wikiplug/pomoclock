@@ -10,6 +10,8 @@
 #include "multitask.h"
 #include "blinkMenu.h"
 #include "incLib.h"
+#include "twoStates.h"
+#include "incLibOne.h"
 
 void pomodoro();
 void pomo_menu();
@@ -19,5 +21,7 @@ void select_longBreak();
 void select_sessionsLongBreak();
 void select_sessions();
 void select_start();
+void select_settings(); 
 
-int incrementador(); 
+void work_or_break(); 
+void pomodoro_timer();
