@@ -24,7 +24,8 @@ int longBreakTime;
 byte sessionsBtwLongBreak;
 int seconds;
 
- 
+ //pomo menu
+ byte settingsPomo = false; 
 
 void setup(){
     pomodoroCountFinish = true; //temporal
@@ -61,8 +62,9 @@ void pomodoro(){
 }
 
 void pomo_menu(){
-    if(button_3.getState()){
+    if(button_3.getState() && settingsPomo == false){
         menuPosition++;
+        lcd.clear(); 
     } 
     if(menuPosition > 3){
         menuPosition = 0;
@@ -71,7 +73,7 @@ void pomo_menu(){
     if(menuPosition == 0){
         select_sessions();
     }
-    if(menuPosition == 1){
+    if(menuPosition == 1 && settingsPomo == false){
         select_settings(); 
     }
     if(menuPosition == 2){
@@ -95,15 +97,27 @@ void select_sessions(){
     lcd.print(incLibSessions.varValue());
     
     lcd.setCursor(0, 1);
-    lcd.print("  start");
+    lcd.print("  settings.");
     lcd.setCursor(0, 2); 
-    lcd.print("  settings"); 
+    lcd.print("  start."); 
     lcd.setCursor(0, 3); 
     lcd.print("(FINISH TIME: 00:00)");
     //print: finish time: 00:00 
 }
 
-void select_settings(){}
+void select_settings(){
+    lcd.setCursor(0, 1); 
+    blinkMenu1.alternate("- ", "  ", 750);
+    lcd.print(blinkMenu1.getWord()); 
+    lcd.print("settings."); 
+
+    if(button_1.getState()){
+        settingsPomo = true; 
+        lcd.clear(); 
+    }
+
+
+}
 
 void select_work(){
     // INGRESAMOS LA PALABRA DE LA OPCIÓN DEL MENÚ EN LA QUE ESTAMOS, LA LIBRERIA
