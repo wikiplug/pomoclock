@@ -17,11 +17,12 @@ int pomodoroCountFinish;
 int timePomodoro;   
 int stateBreak; 
 
-int sessions; 
-int workTime; 
-int shortBreakTime; 
-int longBreakTime; 
-byte sessionsBtwLongBreak;
+byte sessions;
+byte countingSessions; 
+int workTime = 0; 
+int shortBreakTime = 1; 
+int longBreakTime = 3; 
+byte sessionsBtwLongBreak = 2;
 int seconds;
 
  //pomo menu
@@ -46,18 +47,16 @@ void loop(){
 void pomodoro(){ 
     pomoSwitchRead = digitalRead(pomoSwitch);
     if(pomoSwitchRead == HIGH){
-        if(startPomo == LOW){ //SI LA OPCION DE START NO FUE SELECCIONADA ANTERIORMENTE SE MUESTRA EL MENU POMODORO
+        if(startPomo == false){ //SI LA OPCION DE START NO FUE SELECCIONADA ANTERIORMENTE SE MUESTRA EL MENU POMODORO
             pomo_menu();
         }
         else{
-            work_or_break(); //FUNCION QUE DICTAMINA SI ES TIEMPO DE TRABAJO O DESCANSO
+            work_or_break(); //FUNCIÓN QUE DICTAMINA SI ES TIEMPO DE TRABAJO O DESCANSO
             pomodoro_timer(); 
-
         }
     }
-
     else{ //REGRESO TODAS LAS VARIABLES NECESARIAS PARA EL CORRECTO INICIO DEL POMODORO A SU VALOR DEFAULT.
-        startPomo = LOW;
+        startPomo = false;
     }
 }
 
@@ -66,7 +65,7 @@ void pomo_menu(){
         menuPosition++;
         lcd.clear(); 
     } 
-    if(menuPosition > 3){
+    if(menuPosition > 2){
         menuPosition = 0;
     }
 
@@ -78,45 +77,68 @@ void pomo_menu(){
     }
     if(menuPosition == 2){
         select_start();
-    }
-    
-    select_longBreak();
-    select_sessionsLongBreak();
-
+    }   
+}
+void pomo_menu_display(){
+    lcd.setCursor(2, 0);
+    lcd.print("sessions: ");
+    lcd.print(sessions); 
+    lcd.setCursor(2, 1);
+    lcd.print("settings.");
+    lcd.setCursor(2, 2);
+    lcd.print("start");
+    lcd.setCursor(0, 3);
+    lcd.print("(FINISH TIME: 00:00)"); 
 }
 
 void select_sessions(){
-    lcd.setCursor(0, 0);
     blinkMenu1.alternate("- ", "  ", 750); 
+    lcd.setCursor(0, 0);
     lcd.print(blinkMenu1.getWord());
-    lcd.print("sessions: "); 
+    
     incLibSessions.incThisVar(sessions);
+    sessions = incLibSessions.varValue(); 
     if(incLibSessions.lcdValue()){
         lcd.clear(); 
     }
-    lcd.print(incLibSessions.varValue());
-    
-    lcd.setCursor(0, 1);
-    lcd.print("  settings.");
-    lcd.setCursor(0, 2); 
-    lcd.print("  start."); 
-    lcd.setCursor(0, 3); 
-    lcd.print("(FINISH TIME: 00:00)");
-    //print: finish time: 00:00 
+    pomo_menu_display(); 
 }
 
 void select_settings(){
-    lcd.setCursor(0, 1); 
     blinkMenu1.alternate("- ", "  ", 750);
+    lcd.setCursor(0, 1); 
     lcd.print(blinkMenu1.getWord()); 
-    lcd.print("settings."); 
-
+    
     if(button_1.getState()){
         settingsPomo = true; 
         lcd.clear(); 
     }
+    pomo_menu_display();
+}
 
+void select_start(){
+    lcd.setCursor(0, 2); 
+    blinkMenu1.alternate("- ", "  ", 750);
+    lcd.print(blinkMenu1.getWord()); 
+    lcd.print("start."); 
 
+    if(button_1.getState()){
+        //ACTIVAR START
+        startPomo = true; 
+        countingSessions = sessions; 
+        lcd.clear(); 
+        if((shortBreakTime || longBreakTime || workTime || sessionsBtwLongBreak) == 0){
+            startPomo == false; 
+            lcd.setCursor(0, 1);
+            lcd.print("before start"); 
+            lcd.setCursor(0, 2); 
+            lcd.print("update settings!");
+            delay(1000);
+            lcd.clear(); 
+            // los unicos delays que el programa lleva estan en las advertencias
+            // siempre y cuando no haya ninguna función contando tiempo detras
+        }
+    }
 }
 
 void select_work(){
@@ -143,8 +165,7 @@ void select_work(){
     lcd.setCursor(0, 2);
     lcd.print("long break:"); 
     lcd.setCursor(0, 3); 
-    lcd.print("longBreakDelay:"); 
-    
+    lcd.print("longBreakDelay:");    
 }
 
 
@@ -156,13 +177,17 @@ void select_shortBreak(){
 void select_longBreak(){}
 void select_sessionsLongBreak(){}
 
-void select_start(){}
+
 
 void work_or_break(){
-    // alterna entre dos estados: work/break, si está en break alterna entre short o long
-    // alterna entre short o long en base a si una var es igual al longBreakTime seleccionado
+    // alterna entre dos estados: work/break, si está en break alterna entre short o long.
+    // alterna entre short o long en base a si una variable es igual al longBreakTime seleccionado
     // en el menú. 
     if(pomodoroCountFinish == true){
+        countingSessions--; 
+        if(countingSessions == 0){
+            startPomo = false; 
+        }
         statePomodoro = workOrBreak.getState();
     }
     if(statePomodoro == true && pomodoroCountFinish == true){ 
@@ -188,7 +213,7 @@ void pomodoro_timer(){
     // cuenta el tiempo hacia atras con la libreria multitasking, una vez llega a 0, timePomodoro
     // actualiza su valor a su nuevo estado (work, break) y empieza a contar de nuevo
     // ademas, se visualiza el tiempo en pantalla. 
-    pomoTimer.init(1000);
+    pomoTimer.init(100);
     if(pomoTimer.delay()){
         seconds--; 
     }
