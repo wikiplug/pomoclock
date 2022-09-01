@@ -1,36 +1,41 @@
 #include "header.h"
 #include "objects.h"
 
-
-
 #define pomoSwitch 16
 bool pomoSwitchRead;
-byte startPomo = LOW; //temporal el "HIGH"
+
 bool selectButton;
 bool selectButtonRead;
 byte menuPosition;
 
-
-// EJECUCIÓN DE POMODORO
-int statePomodoro;
-int pomodoroCountFinish;
-int timePomodoro;   
-int stateBreak; 
-
+//POMO MENU
+//contadores
 byte sessions;
+
+//boolenas 
+byte settingsPomo = false; 
+byte startPomo; 
+
+
+
+// POMO TIMER
+//variables booleanas
+int pomodoroCountFinish;
+byte firstSession; 
+int statePomodoro; //pomodoro en break o work?
+
+//contadores 
 byte countingSessions; 
-int workTime = 0; 
+byte sessionsBtwLongBreak = 2;
+int workTime = 2; 
 int shortBreakTime = 1; 
 int longBreakTime = 3; 
-byte sessionsBtwLongBreak = 2;
+int timePomodoro;   // carga el tiempo de workTime o shortBreakTime o longBreakTime (depende de statePomodoro)
 int seconds;
 
- //pomo menu
- byte settingsPomo = false; 
+
 
 void setup(){
-    pomodoroCountFinish = true; //temporal
-
     Serial.begin(115200); 
     lcd.begin(20, 4);      //Iniciamos el lcd
     lcd.backlight();       //Encendemos la luz de fondo
@@ -63,11 +68,11 @@ void pomodoro(){
 void pomo_menu(){
     if(button_3.getState() && settingsPomo == false){
         menuPosition++;
+        if(menuPosition > 2){ 
+            menuPosition = 0;
+        }
         lcd.clear(); 
     } 
-    if(menuPosition > 2){
-        menuPosition = 0;
-    }
 
     if(menuPosition == 0){
         select_sessions();
@@ -79,7 +84,11 @@ void pomo_menu(){
         select_start();
     }   
 }
+
+// FUNCIÓN QUE IMPRIME EL POMO MENÚ EN EL DISPLAY
 void pomo_menu_display(){
+    lcd.setCursor(0, menuPosition);
+    lcd.print("- ");
     lcd.setCursor(2, 0);
     lcd.print("sessions: ");
     lcd.print(sessions); 
@@ -92,23 +101,20 @@ void pomo_menu_display(){
 }
 
 void select_sessions(){
-    blinkMenu1.alternate("- ", "  ", 750); 
-    lcd.setCursor(0, 0);
-    lcd.print(blinkMenu1.getWord());
-    
+    //blinkMenu1.alternate("- ", "  ", 750); 
+    //lcd.setCursor(0, 0);
+    //lcd.print(blinkMenu1.getWord());
+
     incLibSessions.incThisVar(sessions);
-    sessions = incLibSessions.varValue(); 
     if(incLibSessions.lcdValue()){
         lcd.clear(); 
     }
-    pomo_menu_display(); 
+    sessions = incLibSessions.varValue();
+
+    pomo_menu_display();
 }
 
 void select_settings(){
-    blinkMenu1.alternate("- ", "  ", 750);
-    lcd.setCursor(0, 1); 
-    lcd.print(blinkMenu1.getWord()); 
-    
     if(button_1.getState()){
         settingsPomo = true; 
         lcd.clear(); 
@@ -117,18 +123,18 @@ void select_settings(){
 }
 
 void select_start(){
-    lcd.setCursor(0, 2); 
-    blinkMenu1.alternate("- ", "  ", 750);
-    lcd.print(blinkMenu1.getWord()); 
-    lcd.print("start."); 
+    pomo_menu_display();
 
     if(button_1.getState()){
         //ACTIVAR START
         startPomo = true; 
-        countingSessions = sessions; 
+        firstSession = true; 
+        countingSessions = sessions * 2;
+        // se lo multiplica por dos porque el codigo interpreta también como sesión a los breaks
+        // sin embargo, para el usuario las sesiones son las sesiones de trabajo.   
         lcd.clear(); 
-        if((shortBreakTime || longBreakTime || workTime || sessionsBtwLongBreak) == 0){
-            startPomo == false; 
+        if((sessions == 0)|| (shortBreakTime == 0) || (longBreakTime == 0) || (workTime == 0) || (sessionsBtwLongBreak == 0)){
+            startPomo = false; 
             lcd.setCursor(0, 1);
             lcd.print("before start"); 
             lcd.setCursor(0, 2); 
@@ -183,10 +189,21 @@ void work_or_break(){
     // alterna entre dos estados: work/break, si está en break alterna entre short o long.
     // alterna entre short o long en base a si una variable es igual al longBreakTime seleccionado
     // en el menú. 
-    if(pomodoroCountFinish == true){
+    if(pomodoroCountFinish == true || firstSession == true){
+        pomodoroCountFinish = true; //reivindica que la var sea true en caso de que no lo haya sido.
+        firstSession = false; 
         countingSessions--; 
         if(countingSessions == 0){
+            //imprimimos alerta
+            lcd.clear(); 
+            delay(100);
+            lcd.setCursor(3, 1); 
+            lcd.print("TIME FINISHED"); 
+            delay(900); 
+            lcd.clear(); 
+            //devuelvo variables de la función a default. 
             startPomo = false; 
+            pomodoroCountFinish = false; 
         }
         statePomodoro = workOrBreak.getState();
     }
@@ -234,4 +251,8 @@ void pomodoro_timer(){
         lcd.print("0"); 
     }
     lcd.print(seconds); 
+
+    if(startPomo == false){
+        lcd.clear(); 
+    }
 }

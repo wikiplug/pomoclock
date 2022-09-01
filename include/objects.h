@@ -6,6 +6,8 @@ button button_3(15, 150);
 
 //blink selection
 blinkMenu blinkMenu1;
+blinkMenu blinkMenu2;
+blinkMenu blinkMenu3;
 
 //incLib 1
 incLibOne incLibSessions; 
