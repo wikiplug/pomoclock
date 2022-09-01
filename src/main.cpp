@@ -33,7 +33,10 @@ int longBreakTime = 3;
 int timePomodoro;   // carga el tiempo de workTime o shortBreakTime o longBreakTime (depende de statePomodoro)
 int seconds;
 
+//pomo timer
 
+// variables de esta funcion (TEMPORAL)
+int settingsPosition; 
 
 void setup(){
     Serial.begin(115200); 
@@ -52,21 +55,25 @@ void loop(){
 void pomodoro(){ 
     pomoSwitchRead = digitalRead(pomoSwitch);
     if(pomoSwitchRead == HIGH){
-        if(startPomo == false){ //SI LA OPCION DE START NO FUE SELECCIONADA ANTERIORMENTE SE MUESTRA EL MENU POMODORO
+        if(startPomo == false && settingsPomo == false){ //SI LA OPCION DE START NO FUE SELECCIONADA ANTERIORMENTE SE MUESTRA EL MENU POMODORO
             pomo_menu();
         }
-        else{
+        if(startPomo == false && settingsPomo == true){
+            pomo_settings(); 
+        }
+        if(startPomo == true){
             work_or_break(); //FUNCIÓN QUE DICTAMINA SI ES TIEMPO DE TRABAJO O DESCANSO
             pomodoro_timer(); 
         }
     }
     else{ //REGRESO TODAS LAS VARIABLES NECESARIAS PARA EL CORRECTO INICIO DEL POMODORO A SU VALOR DEFAULT.
         startPomo = false;
+        settingsPomo = false; 
     }
 }
 
 void pomo_menu(){
-    if(button_3.getState() && settingsPomo == false){
+    if(button_3.getState()){
         menuPosition++;
         if(menuPosition > 2){ 
             menuPosition = 0;
@@ -77,7 +84,7 @@ void pomo_menu(){
     if(menuPosition == 0){
         select_sessions();
     }
-    if(menuPosition == 1 && settingsPomo == false){
+    if(menuPosition == 1){
         select_settings(); 
     }
     if(menuPosition == 2){
@@ -85,7 +92,6 @@ void pomo_menu(){
     }   
 }
 
-// FUNCIÓN QUE IMPRIME EL POMO MENÚ EN EL DISPLAY
 void pomo_menu_display(){
     lcd.setCursor(0, menuPosition);
     lcd.print("- ");
@@ -101,30 +107,24 @@ void pomo_menu_display(){
 }
 
 void select_sessions(){
-    //blinkMenu1.alternate("- ", "  ", 750); 
-    //lcd.setCursor(0, 0);
-    //lcd.print(blinkMenu1.getWord());
-
     incLibSessions.incThisVar(sessions);
     if(incLibSessions.lcdValue()){
         lcd.clear(); 
     }
     sessions = incLibSessions.varValue();
-
     pomo_menu_display();
 }
 
 void select_settings(){
+    pomo_menu_display();
     if(button_1.getState()){
         settingsPomo = true; 
         lcd.clear(); 
     }
-    pomo_menu_display();
 }
 
 void select_start(){
     pomo_menu_display();
-
     if(button_1.getState()){
         //ACTIVAR START
         startPomo = true; 
@@ -147,12 +147,48 @@ void select_start(){
     }
 }
 
-void select_work(){
-    // INGRESAMOS LA PALABRA DE LA OPCIÓN DEL MENÚ EN LA QUE ESTAMOS, LA LIBRERIA
-    // VA A HACER QUE PARPADEE CADA 1 SEG, IMPRIMIMOS ESA PALABRA EN EL DISPLAY.
-    blinkMenu1.alternate("pomodoro: ", "          ", 1000); 
-    lcd.setCursor(0, 0);
-    lcd.print(blinkMenu1.getWord());   
+
+void pomo_settings(){
+    if(button_3.getState()){
+        settingsPosition++; 
+        if(settingsPosition > 3){
+            settingsPosition = 3; 
+        }
+    }
+
+    if(settingsPosition == 0){
+        select_time_pomodoro(); //duración del pomodoro (tiempo de trabajo)
+    }
+    if(settingsPosition == 1){
+        select_shortBreak();
+    }
+    if(settingsPosition == 2){
+        select_longBreak(); 
+    }
+
+
+
+}
+
+void pomo_settings_display(){
+    lcd.setCursor(0, settingsPosition);
+    lcd.print("- "); 
+    blinkMenu1.alternate("SETTINGS", "        ", 1000);
+    lcd.setCursor(5, 0);
+    lcd.print(blinkMenu1.getWord()); 
+    lcd.setCursor(2, 1);
+    lcd.print("pomodoro: ");
+    lcd.setCursor(2, 2);
+    lcd.print("short break:");
+    lcd.setCursor(2, 3); 
+    lcd.print("long break: "); 
+    lcd.setCursor(19, 3); 
+    lcd.print("↴"); 
+
+}
+
+void select_time_pomodoro(){
+    pomo_settings_display(); 
 
     // INCREMENTAMOS/DECREMENTAMOS Y LEEMOS EL VALOR DE "WORK TIME" DEPENDIENDO DE QUE PULSADOR SE PRESIONE
     incLibWorkTime.incThisVar(workTime); 
@@ -160,26 +196,11 @@ void select_work(){
     // REALIZAMOS UN LCD CLEAR DEPENDIENDO DE SI LA VARIABLE PASA DE UNIDADES A DECENAS, CENTENAS, ETC. 
     if(incLibWorkTime.lcdValue()){
         lcd.clear(); 
-    }
-    // IMPRIMIMOS TODO EL RESTO DEL MENÚ.
-    lcd.setCursor(14, 0);
-    lcd.print(incLibWorkTime.varValue());
-    lcd.print("min");
-    
-    lcd.setCursor(0, 1); 
-    lcd.print("short break:");
-    lcd.setCursor(0, 2);
-    lcd.print("long break:"); 
-    lcd.setCursor(0, 3); 
-    lcd.print("longBreakDelay:");    
+    }   
 }
 
 
-void select_shortBreak(){
-
-
-
-}
+void select_shortBreak(){}
 void select_longBreak(){}
 void select_sessionsLongBreak(){}
 
