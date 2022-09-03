@@ -16,7 +16,7 @@
 void pomodoro();
 void pomo_menu();
 void pomo_settings();
-void select_time_pomodoro();    
+void select_pomodoro();    
 void select_shortBreak();
 void select_longBreak();
 void select_sessionsLongBreak();

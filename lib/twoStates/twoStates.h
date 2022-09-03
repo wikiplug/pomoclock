@@ -4,10 +4,10 @@
 #include "Arduino.h"
 class twoStates{
     private:
-        int _num; 
         int _div; 
         int _result; 
     public: 
+        int _num;
         twoStates();
         void process(); 
         int getState();
