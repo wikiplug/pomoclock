@@ -16,6 +16,7 @@ incLibOne incLibSessions;
 // incLib 5
 incLib incLibWorkTime;
 incLib incLibShortBreak; 
+incLib incLibLongBreak; 
 
 //objetos work_or_break()
 twoStates workOrBreak; 

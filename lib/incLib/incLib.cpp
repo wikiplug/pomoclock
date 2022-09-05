@@ -11,33 +11,31 @@ void incLib::incThisVar(int varInc){
 }
 
 void incLib::process(){ 
-    static int _n = _varInc; 
     //LEE EL ESTADO DEL PULSADOR Y EN BASE A ESO INCREMENTA/DECREMENTA LA VARIABLE
     if(button_1IncLib.getState()){
-        _n = _n + 5;
+        _varInc  = _varInc + 5;
     }
     if(button_2IncLib.getState()){
-        _n = _n - 5; 
+        _varInc  = _varInc - 5; 
     }
     // SI LA VARIABLE SUPERA CIERTO VALOR VUELVE A 0
-    if(_n > 9999 || _n < 0){
+    if(_varInc > 9999 || _varInc < 0){
         _lcdClear = HIGH; 
-        _n = 0;
+        _varInc = 0;
     }
     // CUANDO CAMBIA DE CENTENAS A DECENAS, DECENAS A UNIDADES, ETC. LCD.CLEAR = HIGH
-    else if((_n == 5 && _k == 10)|| (_n == 95 && _k == 100) || (_n == 995 && _k == 1000)){
+    else if((_varInc == 5 && _k == 10)|| (_varInc == 95 && _k == 100) || (_varInc == 995 && _varInc == 1000)){
         _lcdClear = HIGH; 
     }
     else{
         _lcdClear = LOW; 
     }
-    _k = _n;  
-    _result = _n; 
+    _k = _varInc;  
 }
 
 int incLib::varValue(){
     process();
-    return _result; //retorna el valor de la variable
+    return _varInc; //retorna el valor de la variable
 }
 
 int incLib::lcdValue(){
