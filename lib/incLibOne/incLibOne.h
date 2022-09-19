@@ -9,7 +9,6 @@ class incLibOne
     private:
         int _k;
         int _varInc; 
-        int _result; 
         int _lcdClear; 
         void process(); 
     public:

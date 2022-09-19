@@ -19,10 +19,11 @@ void pomo_settings();
 void select_pomodoro();    
 void select_shortBreak();
 void select_longBreak();
-void select_sessionsLongBreak();
+void select_longBreakDelay();
 void select_sessions();
 void select_start();
 void select_settings(); 
+void select_exit();
 
 void work_or_break(); 
 void pomodoro_timer();

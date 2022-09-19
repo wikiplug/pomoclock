@@ -10,13 +10,13 @@ blinkMenu blinkMenu2;
 blinkMenu blinkMenu3;
 
 //incLib 1
-incLibOne incLibSessions; 
-
+incLibOne incLibSessions;
+incLibOne incLibLongBreakDelay;
 
 // incLib 5
 incLib incLibWorkTime;
-incLib incLibShortBreak; 
-incLib incLibLongBreak; 
+incLib incLibShortBreak;
+incLib incLibLongBreak;
 
 //objetos work_or_break()
 twoStates workOrBreak; 
