@@ -1,7 +1,7 @@
 #include "header.h"
 #include "objects.h"
 
-#define pomoSwitch 16
+#define pomoSwitch 25
 bool pomoSwitchRead;
 
 bool selectButton;
@@ -17,10 +17,6 @@ byte sessions;
 //boolenas 
 byte settingsPomo = false; 
 byte startPomo; 
-
-
-
-
 
 // WORK_OR_BREAK y POMO_TIMER
 //variables booleanas
@@ -40,7 +36,6 @@ int seconds;
 byte breaksForLongBreak; 
 
 //char 
-char statePomodoroCHAR[20];
 
 // variables de esta funcion (TEMPORAL)
 int settingsPosition; 
@@ -50,6 +45,7 @@ void setup(){
     lcd.begin(20, 4);      //Iniciamos el lcd
     lcd.backlight();       //Encendemos la luz de fondo
     lcd.clear();           //Limpiamos la pantalla
+    pinMode(pomoSwitch, INPUT); 
 }
 
 void loop(){
@@ -298,7 +294,7 @@ void work_or_break(){
         firstSession = false; 
         statePomodoro = workOrBreak.getState();
     }
-    if(statePomodoro == true && pomodoroCountFinish == true){ 
+    if(statePomodoro == true && pomodoroCountFinish == true){  
         minutes = workTime; 
         pomodoroCountFinish = false;
     }
@@ -333,6 +329,12 @@ void pomodoro_timer(){
             sessionFinish = true; 
         }
     }
+    lcd.setCursor(0, 0);
+    if(statePomodoro == true){
+        lcd.print("pomodoro"); 
+    }
+    if()
+
     lcd.setCursor(0, 1); 
     if(minutes < 10){
         lcd.print("0"); 

@@ -1,7 +1,7 @@
 #include "incLib.h"
 
-button button_1IncLib(13, 150); 
-button button_2IncLib(14, 150); 
+button button_1IncLib(14, 150); 
+button button_2IncLib(27, 150); 
 
 incLib::incLib(){
 }

@@ -1,8 +1,8 @@
 TwiLiquidCrystal lcd(0x27);
 
-button button_1(13, 150); 
-button button_2(14, 150);
-button button_3(15, 150); 
+button button_1(14, 150); 
+button button_2(27, 150);
+button button_3(26, 150); 
 
 //blink selection
 blinkMenu blinkMenu1;
