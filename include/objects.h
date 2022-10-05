@@ -21,6 +21,7 @@ incLib incLibLongBreak;
 //objetos work_or_break()
 twoStates workOrBreak; 
 twoStates shortOrLong; 
+twoStates pause; 
 
 //objetos timer()
 multitask pomoTimer; 
