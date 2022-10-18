@@ -1,49 +1,20 @@
 #include "header.h"
 #include "objects.h"
 
-#define pomoSwitch 25
-bool pomoSwitchRead;
-
-bool selectButton;
-bool selectButtonRead;
-byte menuPosition;
-byte lcdCleanerPomodoro; 
-
-
-//POMO MENU
-//contadores
-byte sessions;
-
-//boolenas 
-byte settingsPomo = false; 
-byte startPomo; 
-
-// WORK_OR_BREAK y POMO_TIMER
-//variables booleanas
-int pomodoroCountFinish;
-byte firstSession; 
-byte statePomodoro; //pomodoro en break o work?
-byte sessionFinish;
-
-//contadores 
-byte countingSessions; 
-byte longBreakDelay;
-int workTime; 
-int shortBreakTime; 
-int longBreakTime; 
-int minutes;   // carga el tiempo de workTime o shortBreakTime o longBreakTime (depende de statePomodoro)
-int seconds;
-byte breaksForLongBreak; 
-
-// variables settings
-int settingsPosition; 
-
-// VARIABLES PAUSA
-byte pausePomodoro; 
-
-
 void setup(){
-    Serial.begin(115200); 
+    Serial.begin(115200);
+    EEPROM.begin(EEPROM_SIZE);
+    workTime = EEPROM.read(0);  
+    shortBreakTime = EEPROM.read(1);
+    longBreakTime = EEPROM.read(2); 
+    longBreakDelay = EEPROM.read(3); 
+    
+    if (! rtc.begin()) {				// si falla la inicializacion del modulo RTC
+        Serial.println("Modulo RTC no encontrado !");	// muestra mensaje de error
+        while (1);					// bucle infinito que detiene ejecucion del programa
+    }
+    rtc.adjust(DateTime(__DATE__, __TIME__)); //TRAEMOS FECHA Y HORA EN FORMATO
+     
     lcd.begin(20, 4);      //Iniciamos el lcd
     lcd.backlight();       //Encendemos la luz de fondo
     lcd.clear();           //Limpiamos la pantalla
@@ -51,6 +22,7 @@ void setup(){
 }
 
 void loop(){
+    DateTime fecha = rtc.now();
     pomodoro();
 }
 
@@ -69,9 +41,9 @@ void pomodoro(){
         }
         if(startPomo == true){
             work_or_break(); //FUNCIÓN QUE DICTAMINA SI ES TIEMPO DE TRABAJO O DESCANSO
-            if(pausePomodoro == true){
-                lcd.setCursor(0, 3);
-                lcd.print("pause");
+            if(button_3.getState()){
+                lcd.clear();
+                pause_pomodoro();  
             }
             if(startPomo == true && pausePomodoro == false){
                 pomodoro_timer(); //temporizador
@@ -90,7 +62,7 @@ void pomodoro(){
         workOrBreak._num = 0; 
         breaksForLongBreak = 0; 
         seconds = 0; 
-        pause._num = 0; 
+        pausePom._num = 0; 
     }
 }
 
@@ -125,7 +97,8 @@ void pomo_menu_display(){
     lcd.setCursor(2, 2);
     lcd.print("start");
     lcd.setCursor(0, 3);
-    lcd.print("(FINISH TIME: 00:00)"); 
+    lcd.print("(FINISH TIME: ");
+    lcd.print("") ;
 }
 
 void select_sessions(){
@@ -134,6 +107,7 @@ void select_sessions(){
         lcd.clear(); 
     }
     sessions = incLibSessions.varValue();
+    finishTime(); 
     pomo_menu_display();
 }
 
@@ -143,7 +117,7 @@ void select_settings(){
         settingsPosition = 0; 
         settingsPomo = true; 
         lcd.clear();
-        delay(100); 
+        delay(250); 
     }
 }
 
@@ -155,6 +129,7 @@ void select_start(){
         firstSession = true; 
         countingSessions = sessions; 
         lcd.clear(); 
+        
         if((sessions == 0)|| (shortBreakTime == 0) || (longBreakTime == 0) || (workTime == 0) || (longBreakDelay == 0)){
             startPomo = false; 
             lcd.setCursor(0, 1);
@@ -169,6 +144,23 @@ void select_start(){
     }
 }
 
+void finishTime(){
+    DateTime fecha = rtc.now();
+    int minutosTotal = workTime * sessions + shortBreakTime * (sessions - (sessions / longBreakDelay)) + longBreakTime * (sessions / longBreakDelay);
+    int horaPomodoro = minutosTotal / 60; 
+    float minutosPomodoroDecimal = minutosTotal / 60 - horaPomodoro;
+    int minutosPomodoro = minutosPomodoroDecimal * 60;
+    int n = ((horaPomodoro + fecha.hour()) / 24); 
+    int horaFinal = (horaPomodoro + fecha.hour()) - (n * 24);
+    int minutosFinal = minutosPomodoro + fecha.minute();  
+    if(minutosFinal > 59){
+        minutosFinal = minutosFinal - 60;
+        horaFinal = horaFinal + 1;  
+    }
+    Serial.println(horaFinal); 
+    Serial.print(":"); 
+    Serial.print(minutosFinal); 
+}
 
 void pomo_settings(){
     if(button_3.getState()){ 
@@ -179,27 +171,28 @@ void pomo_settings(){
         lcd.clear();
     }
 
-    if(settingsPosition == 0){
-        select_pomodoro(); //duración del pomodoro (tiempo de trabajo)
-    }
-    if(settingsPosition == 1){
-        select_shortBreak();
-    }
-    if(settingsPosition == 2){
-        select_longBreak(); 
-    }
-    if(settingsPosition == 3){
-        select_longBreakDelay();
-    }
-    if(settingsPosition == 4){
-        select_exit();
+    switch(settingsPosition){
+        case 0:
+            select_pomodoro(); 
+            break; 
+        case 1: 
+            select_shortBreak(); 
+            break; 
+        case 2:
+            select_longBreak(); 
+            break;
+        case 3:
+            select_longBreakDelay();  
+            break; 
+        case 4:
+            select_exit_and_save(); 
+            break; 
     }
 }
 
 void pomo_settings_display1(){
-    blinkMenu1.alternate("SETTINGS", "        ", 1000);
-    lcd.setCursor(5, 0);
-    lcd.print(blinkMenu1.getWord()); 
+    lcd.setCursor(6, 0);
+    lcd.print("SETTINGS"); 
 
     lcd.setCursor(0, settingsPosition+1);
     lcd.print("- "); 
@@ -225,7 +218,7 @@ void pomo_settings_display2(){
     lcd.print("longBreakDelay: ");
     lcd.print(longBreakDelay);
     lcd.setCursor(2, 1);
-    lcd.print("exit"); 
+    lcd.print("exit & save"); 
 }
  
 void select_pomodoro(){
@@ -264,13 +257,30 @@ void select_longBreakDelay(){
     pomo_settings_display2();
 }
 
-void select_exit(){
+void select_exit_and_save(){
     pomo_settings_display2();
     if(button_1.getState()){
+        if(workTime != EEPROM.read(0)){
+            EEPROM.write(0, workTime);
+            EEPROM.commit();
+        }
+        if(shortBreakTime != EEPROM.read(1)){
+            EEPROM.write(1, shortBreakTime);
+            EEPROM.commit();
+        }
+        if(longBreakTime != EEPROM.read(2)){
+            EEPROM.write(2, longBreakTime);
+            EEPROM.commit(); 
+        }
+        if(longBreakDelay != EEPROM.read(3)){
+            EEPROM.write(3, longBreakDelay);
+            EEPROM.commit(); 
+        }   
+        
         settingsPomo = false;
         menuPosition = 0; 
         lcd.clear();
-        delay(100);
+        delay(250);
     }
 }
 
@@ -303,32 +313,27 @@ void work_or_break(){
         statePomodoro = workOrBreak.getState();
     }
     if(statePomodoro == true && pomodoroCountFinish == true){  
-        lcd.setCursor(0, 0); 
-        lcd.print("pomodoro");
+        statePomodoroLCD = 0; // WORK
         minutes = workTime; 
         pomodoroCountFinish = false;
     }
     if(statePomodoro == false && pomodoroCountFinish == true){ //estamos en break, se decide si es short o long
-        lcd.setCursor(0, 0); 
-        lcd.print("long break");
         pomodoroCountFinish = false;
         breaksForLongBreak++;
         if(breaksForLongBreak == longBreakDelay){
+            statePomodoroLCD = 1; // LONG BREAK
             minutes = longBreakTime;
             breaksForLongBreak = 0;        
         }
         else{
-            lcd.setCursor(0, 0);
-            lcd.print("short break"); 
+            statePomodoroLCD = 2; // SHORT BREAK
             minutes = shortBreakTime; 
         } 
     }
 }
  
 void pomodoro_timer(){
-    // cuenta el tiempo hacia atras con la libreria multitasking, una vez llega a 0, timePomodoro
-    // actualiza su valor a su nuevo estado (work, break) y empieza a contar de nuevo
-    // ademas, se visualiza el tiempo en pantalla. 
+    // cuenta el tiempo hacia atras con la libreria multitasking 
     pomoTimer.init(1000);
     if(pomoTimer.delay()){
         seconds--; 
@@ -337,13 +342,34 @@ void pomodoro_timer(){
         seconds = 59; 
         minutes--; 
     }
+    // si el tiempo termina actualiza el estado de pomodoro
     if(minutes == 0 && seconds == 0){
         pomodoroCountFinish = true; 
         if(statePomodoro == false){
             sessionFinish = true; 
         }
     }
-    lcd.setCursor(0, 1); 
+    //actualizacion al cambiar de centenas a decenas
+    if(minutes == 99 && lastMinute == 100){
+        lcd.clear(); 
+    }
+    //imprime en que estado del pomodoro nos encontramos (pomodoro, sh break o long break)
+    switch (statePomodoroLCD){
+        case 0:
+            lcd.setCursor(3, 1);
+            lcd.print("POMODORO"); 
+            break; 
+        case 1:
+            lcd.setCursor(3, 1);
+            lcd.print("SHORT BREAK");   
+            break; 
+        case 2: 
+            lcd.setCursor(3, 1);
+            lcd.print("LONG BREAK");
+            break;   
+    }
+    // imprime el tiempo pomodoro en el lcd
+    lcd.setCursor(3, 2); 
     if(minutes < 10){
         lcd.print("0"); 
     }
@@ -357,9 +383,39 @@ void pomodoro_timer(){
     if(startPomo == false){
         lcd.clear(); 
     }
-    // condicional de pausa de pomodoro
-    if(button_3.getState()){
-        pausePomodoro = pause.getState(); 
-        lcd.clear(); 
+    lastMinute = minutes; 
+}
+
+void pause_pomodoro(){
+    pausePomodoro = pausePom.getState(); 
+    if(pausePomodoro == true){
+        lcd.setCursor(15, 3);
+        lcd.print("PAUSE"); 
     }
+    
+    switch (statePomodoroLCD){
+        case 0:
+            lcd.setCursor(3, 1);
+            lcd.print("POMODORO"); 
+            break; 
+        case 1:
+            lcd.setCursor(3, 1);
+            lcd.print("SHORT BREAK");   
+            break; 
+        case 2: 
+            lcd.setCursor(3, 1);
+            lcd.print("LONG BREAK");
+            break;   
+    }
+    
+    lcd.setCursor(3, 2); 
+    if(minutes < 10){
+        lcd.print("0"); 
+    }
+    lcd.print(minutes);
+    lcd.print(":");
+    if(seconds < 10){
+        lcd.print("0"); 
+    }
+    lcd.print(seconds);
 }

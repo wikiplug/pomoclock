@@ -19,12 +19,16 @@ void incLibOne::process(){
         _varInc--; 
     }
     // SI LA VARIABLE SUPERA CIERTO VALOR VUELVE A 0
-    if(_varInc > 99 || _varInc < 0){
+    if(_varInc < 0){
         _lcdClear = true; 
         _varInc = 0;
     }
+    if(_varInc > 99){
+        _lcdClear = true; 
+        _varInc = 99;
+    }
     // CUANDO CAMBIA DE CENTENAS A DECENAS, DECENAS A UNIDADES, ETC. LCD.CLEAR = HIGH
-    else if((_varInc == 9 && _k == 10)|| (_varInc == 99 && _k == 100) || (_varInc == 999 && _k == 1000)){
+    else if((_varInc == 9 && _k == 10)|| (_varInc == 99 && _k == 100)){
         _lcdClear = true; 
     }
     else{

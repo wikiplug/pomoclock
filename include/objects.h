@@ -1,4 +1,5 @@
 TwiLiquidCrystal lcd(0x27);
+RTC_DS1307 rtc; 
 
 button button_1(14, 150); 
 button button_2(27, 150);
@@ -21,7 +22,7 @@ incLib incLibLongBreak;
 //objetos work_or_break()
 twoStates workOrBreak; 
 twoStates shortOrLong; 
-twoStates pause; 
+twoStates pausePom; 
 
 //objetos timer()
 multitask pomoTimer; 

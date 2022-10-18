@@ -19,12 +19,16 @@ void incLib::process(){
         _varInc  = _varInc - 5; 
     }
     // SI LA VARIABLE SUPERA CIERTO VALOR VUELVE A 0
-    if(_varInc > 995 || _varInc < 0){
+    if(_varInc < 0){
         _lcdClear = true; 
         _varInc = 0;
     }
+    if(_varInc > 255){
+        _lcdClear = true; 
+        _varInc = 255; 
+    }
     // CUANDO CAMBIA DE CENTENAS A DECENAS, DECENAS A UNIDADES, ETC. LCD.CLEAR = HIGH
-    else if((_varInc == 5 && _k == 10)|| (_varInc == 95 && _k == 100) || (_varInc == 995 && _varInc == 1000)){
+    else if((_varInc == 5 && _k == 10)){
         _lcdClear = true; 
     }
     else{
