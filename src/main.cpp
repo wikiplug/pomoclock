@@ -1,8 +1,9 @@
 #include "header.h"
 #include "objects.h"
-
+byte firstON; 
 void setup(){
     Serial.begin(115200);
+
     EEPROM.begin(EEPROM_SIZE);
     workTime = EEPROM.read(0);  
     shortBreakTime = EEPROM.read(1);
@@ -13,17 +14,60 @@ void setup(){
         Serial.println("Modulo RTC no encontrado !");	// muestra mensaje de error
         while (1);					// bucle infinito que detiene ejecucion del programa
     }
-    rtc.adjust(DateTime(__DATE__, __TIME__)); //TRAEMOS FECHA Y HORA EN FORMATO
-     
+    rtc.adjust(DateTime(__DATE__, __TIME__)); //TEMPORAL
+
+    display.setBrightness(1);
+
     lcd.begin(20, 4);      //Iniciamos el lcd
     lcd.backlight();       //Encendemos la luz de fondo
     lcd.clear();           //Limpiamos la pantalla
+    
     pinMode(pomoSwitch, INPUT); 
+    
+    //activa todas las funciones de configuración inicial del equipo si esta en "1"!
+    firstON = EEPROM.read(4); 
+    if(firstON == true){
+        firstON = false; 
+        EEPROM.write(4, firstON);
+        EEPROM.commit();
+        //AGREGAR FUNCIONES DE INICIO (WIFI MANAGER, ETC.) TENER EN CUENTA METER TODO EN UN WHILE
+    }
 }
 
+
+
 void loop(){
-    DateTime fecha = rtc.now();
+    hour(); 
+    if(pomoSwitchRead == LOW){
+        lcdStandard();
+    } 
+    alarms(); 
     pomodoro();
+    
+}
+
+void hour(){
+    DateTime fecha = rtc.now();
+    display.showNumberDecEx(fecha.hour(), 0b01000000, true, 2, 0); 
+    display.showNumberDec(fecha.minute(), true, 2, 2); 
+}
+
+void lcdStandard(){
+    DateTime fecha = rtc.now();
+    lcd.setCursor(0, 0);
+    lcd.print(fecha.day()); 
+    lcd.print("/");
+    lcd.print(fecha.month());
+    lcd.print("/");
+    lcd.print(fecha.year()); 
+}
+
+void alarms(){
+    DateTime fecha = rtc.now();
+    if(fecha.hour() == AlarmHour && fecha.minute() == AlarmMinute){
+        //genero un tono. INTERRUMPO CUALQUIER COSA QUE ESTE OCURRIENDO E IMPRIMO MENSAJE EN PANTALLA. 
+    }
+    
 }
 
 // EN ESTA FUNCIÓN SE CORROBORA SI SE ACTIVA LA OPCION POMODORO O NO
@@ -63,6 +107,7 @@ void pomodoro(){
         breaksForLongBreak = 0; 
         seconds = 0; 
         pausePom._num = 0; 
+        pausePomodoro = false; 
     }
 }
 
@@ -98,7 +143,16 @@ void pomo_menu_display(){
     lcd.print("start");
     lcd.setCursor(0, 3);
     lcd.print("(FINISH TIME: ");
-    lcd.print("") ;
+    if(horaFinal < 10){
+        lcd.print("0"); 
+    }
+    lcd.print(horaFinal);
+    lcd.print(":");  
+    if(minutosFinal < 10){
+        lcd.print("0");
+    }
+    lcd.print(minutosFinal); 
+    lcd.print(")"); 
 }
 
 void select_sessions(){
@@ -148,18 +202,15 @@ void finishTime(){
     DateTime fecha = rtc.now();
     int minutosTotal = workTime * sessions + shortBreakTime * (sessions - (sessions / longBreakDelay)) + longBreakTime * (sessions / longBreakDelay);
     int horaPomodoro = minutosTotal / 60; 
-    float minutosPomodoroDecimal = minutosTotal / 60 - horaPomodoro;
-    int minutosPomodoro = minutosPomodoroDecimal * 60;
+    float minutosPomodoroDecimal = minutosTotal / 60.0 - horaPomodoro;
+    float minutosPomodoro = minutosPomodoroDecimal * 60.0;
     int n = ((horaPomodoro + fecha.hour()) / 24); 
-    int horaFinal = (horaPomodoro + fecha.hour()) - (n * 24);
-    int minutosFinal = minutosPomodoro + fecha.minute();  
+    horaFinal = (horaPomodoro + fecha.hour()) - (n * 24);
+    minutosFinal = minutosPomodoro + fecha.minute();  
     if(minutosFinal > 59){
         minutosFinal = minutosFinal - 60;
         horaFinal = horaFinal + 1;  
-    }
-    Serial.println(horaFinal); 
-    Serial.print(":"); 
-    Serial.print(minutosFinal); 
+    }  
 }
 
 void pomo_settings(){

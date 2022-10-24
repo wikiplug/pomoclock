@@ -4,6 +4,7 @@
 #include <TwiLiquidCrystal.h>
 #include <RTClib.h>		
 #include <EEPROM.h>
+#include <TM1637Display.h>
 
 //LIBRERIAS LOCALES
 #include "button.h"
@@ -12,6 +13,8 @@
 #include "incLib.h"
 #include "twoStates.h"
 #include "incLibOne.h"
+
+void hour(); 
 
 void pomodoro();
 void pomo_menu();
@@ -33,6 +36,8 @@ void work_or_break();
 void pomodoro_timer();
 void pause_pomodoro(); 
 
+#define CLK 16				
+#define DIO 17				
 
 #define pomoSwitch 25
 
@@ -65,3 +70,6 @@ byte breaksForLongBreak;
 byte settingsPosition; 
 // VARIABLES PAUSA
 byte pausePomodoro;
+// variables time finish 
+int horaFinal; 
+int minutosFinal;

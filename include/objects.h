@@ -1,5 +1,6 @@
 TwiLiquidCrystal lcd(0x27);
 RTC_DS1307 rtc; 
+TM1637Display display(CLK, DIO);
 
 button button_1(14, 150); 
 button button_2(27, 150);
