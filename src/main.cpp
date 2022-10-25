@@ -1,5 +1,8 @@
 #include "header.h"
 #include "objects.h"
+#include "webpage.h"
+#include "WiFi_functions.h"
+
 byte firstON; 
 void setup(){
     Serial.begin(115200);
@@ -44,6 +47,7 @@ void loop(){
     alarms(); 
     pomodoro();
     
+    setupWiFi();
 }
 
 void hour(){
@@ -61,7 +65,8 @@ void lcdStandard(){
     lcd.print("/");
     lcd.print(fecha.year()); 
 }
-
+int AlarmHour;
+int AlarmMinute;
 void alarms(){
     DateTime fecha = rtc.now();
     if(fecha.hour() == AlarmHour && fecha.minute() == AlarmMinute){

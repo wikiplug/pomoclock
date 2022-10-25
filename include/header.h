@@ -6,6 +6,13 @@
 #include <EEPROM.h>
 #include <TM1637Display.h>
 
+//DEPENDENCIAS WIFI
+#include <WebServer.h>
+#include <WiFi.h>
+#include <DNSServer.h>
+#include <WebSocketsServer.h>
+#include <WiFiManager.h>
+
 //LIBRERIAS LOCALES
 #include "button.h"
 #include "multitask.h"
@@ -15,6 +22,8 @@
 #include "incLibOne.h"
 
 void hour(); 
+void alarms();
+void lcdStandard();
 
 void pomodoro();
 void pomo_menu();
