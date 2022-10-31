@@ -1,9 +1,56 @@
 #include "header.h"
 #include "objects.h"
 #include "webpage.h"
-#include "WiFi_functions.h"
 
 byte firstON; 
+
+IPAddress ip;
+String wifi;
+
+WebServer server(80);
+WebSocketsServer webSocket = WebSocketsServer(81);
+
+void handleRoot()
+{
+  server.send(200,"text/html", webpageCont);
+}
+
+void setupWiFi(){
+  WiFi.mode(WIFI_STA); //es un set mode, el esp está preterminado en STA+AP
+  Serial.begin(115200); //Comunicación en monitor serie
+  WiFiManager wm; //Creamos la instancia o al modo de configuración: "); //LCD
+  Serial.println(WiFi.softAPIP());
+  Serial.println ("Configurar wifi"); //LCD
+  wm.setConfigPortalTimeout(180); //Se establece un tiempo de espera para evitar que el ESP no se cuelgue a ser configurado en caso de un corte de suministro electrico. 
+  if(!wm.autoConnect("RED-ESP32")){
+        Serial.print("No hay datos guardados");} //Si no hay datos guardados, wm levanta un AP. LCD
+  else { 
+          Serial.print ("Existen datos guardados");} //Nos conectamos de forma automática. LCD
+          wifi= WiFi.SSID();
+          Serial.println ("Conectado a la red Wifi: "); //LCD
+          Serial.println(wifi);
+          ip = WiFi.localIP();
+          Serial.print("IP: "); //LCD
+          Serial.println(ip);
+          server.on("/", handleRoot);
+          server.begin(); webSocket.begin();
+}
+
+void loopWiFi(){
+  webSocket.loop(); server.handleClient();
+//====================================================================
+//Función para resetear(borrar)credenciales de red(ingresando'a'en el monitor serie)
+//====================================================================
+  char option = ' ';
+    if(Serial.available() != 0){
+      option = Serial.read(); 
+    if(option == 'a'){
+      WiFiManager wm; //Se crea nuevamente la instancia del wm para el reset.
+      wm.resetSettings();  
+      Serial.println ("Reiniciar equipo");} //LCD
+    }
+}
+
 void setup(){
     Serial.begin(115200);
 
@@ -27,27 +74,25 @@ void setup(){
     
     pinMode(pomoSwitch, INPUT); 
     
-    //activa todas las funciones de configuración inicial del equipo si esta en "1"!
-    firstON = EEPROM.read(4); 
-    if(firstON == true){
-        firstON = false; 
-        EEPROM.write(4, firstON);
-        EEPROM.commit();
-        //AGREGAR FUNCIONES DE INICIO (WIFI MANAGER, ETC.) TENER EN CUENTA METER TODO EN UN WHILE
-    }
+    // //activa todas las funciones de configuración inicial del equipo si esta en "1"!
+    // firstON = EEPROM.read(4); 
+    // if(firstON == true){
+    //     firstON = false; 
+    //     EEPROM.write(4, firstON);
+    //     EEPROM.commit();
+    //     //AGREGAR FUNCIONES DE INICIO (WIFI MANAGER, ETC.) TENER EN CUENTA METER TODO EN UN WHILE
+    // }
+    setupWiFi(); 
 }
 
-
-
 void loop(){
+    loopWiFi(); 
     hour(); 
     if(pomoSwitchRead == LOW){
         lcdStandard();
     } 
     alarms(); 
     pomodoro();
-    
-    setupWiFi();
 }
 
 void hour(){
