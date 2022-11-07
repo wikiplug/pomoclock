@@ -45,10 +45,19 @@ void work_or_break();
 void pomodoro_timer();
 void pause_pomodoro(); 
 
-#define CLK 16				
-#define DIO 17				
+byte firstON; 
 
-#define pomoSwitch 25
+IPAddress ip;
+String wifi;
+
+WebServer server(80);
+WebSocketsServer webSocket = WebSocketsServer(81);
+
+#define CLK 16				
+#define DIO 17		
+
+#define buzzerPin 32
+#define pomoSwitch 33
 
 #define EEPROM_SIZE 512
 //pomodoro

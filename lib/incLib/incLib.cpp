@@ -1,9 +1,11 @@
 #include "incLib.h"
 
-button button_1IncLib(14, 150); 
-button button_2IncLib(27, 150); 
+button button_1IncLib(25, 150); 
+button button_2IncLib(26, 150); 
 
-incLib::incLib(){
+incLib::incLib(byte buzzerPin){
+    _buzzerPin = buzzerPin; 
+    pinMode(_buzzerPin, OUTPUT);
 }
 
 void incLib::incThisVar(int varInc){
@@ -13,9 +15,11 @@ void incLib::incThisVar(int varInc){
 void incLib::process(){ 
     //LEE EL ESTADO DEL PULSADOR Y EN BASE A ESO INCREMENTA/DECREMENTA LA VARIABLE
     if(button_1IncLib.getState()){
+        tone(_buzzerPin, 1000, 100);
         _varInc  = _varInc + 5;
     }
     if(button_2IncLib.getState()){
+        tone(_buzzerPin, 1000, 100);
         _varInc  = _varInc - 5; 
     }
     // SI LA VARIABLE SUPERA CIERTO VALOR VUELVE A 0

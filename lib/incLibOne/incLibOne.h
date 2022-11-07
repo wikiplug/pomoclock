@@ -10,9 +10,10 @@ class incLibOne
         int _k;
         int _varInc; 
         int _lcdClear; 
+        byte _buzzerPin; 
         void process(); 
     public:
-        incLibOne();
+        incLibOne(byte buzzerPin);
         void incThisVar(int varInc); 
         int varValue();
         int lcdValue(); 

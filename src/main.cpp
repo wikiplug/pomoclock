@@ -2,14 +2,6 @@
 #include "objects.h"
 #include "webpage.h"
 
-byte firstON; 
-
-IPAddress ip;
-String wifi;
-
-WebServer server(80);
-WebSocketsServer webSocket = WebSocketsServer(81);
-
 void handleRoot()
 {
   server.send(200,"text/html", webpageCont);
@@ -17,7 +9,6 @@ void handleRoot()
 
 void setupWiFi(){
   WiFi.mode(WIFI_STA); //es un set mode, el esp está preterminado en STA+AP
-  Serial.begin(115200); //Comunicación en monitor serie
   WiFiManager wm; //Creamos la instancia o al modo de configuración: "); //LCD
   Serial.println(WiFi.softAPIP());
   Serial.println ("Configurar wifi"); //LCD
@@ -164,21 +155,25 @@ void pomodoro(){
 void pomo_menu(){
     if(button_3.getState()){
         menuPosition++;
+        tone(buzzerPin, 1000, 100);
         if(menuPosition > 2){ 
             menuPosition = 0;
         }
         lcd.clear(); 
     } 
 
-    if(menuPosition == 0){
+    switch (menuPosition){
+    case 0:
         select_sessions();
-    }
-    if(menuPosition == 1){
-        select_settings(); 
-    }
-    if(menuPosition == 2){
+        break;
+    
+    case 1:
+        select_settings();
+        break;
+    case 2:
         select_start();
-    }   
+        break;
+    }
 }
 
 void pomo_menu_display(){
@@ -218,6 +213,7 @@ void select_sessions(){
 void select_settings(){
     pomo_menu_display();
     if(button_1.getState()){
+        tone(buzzerPin, 1000, 100);
         settingsPosition = 0; 
         settingsPomo = true; 
         lcd.clear();
@@ -228,6 +224,7 @@ void select_settings(){
 void select_start(){
     pomo_menu_display();
     if(button_1.getState()){
+        tone(buzzerPin, 1000, 100);
         //ACTIVAR START
         startPomo = true; 
         firstSession = true; 
@@ -264,7 +261,8 @@ void finishTime(){
 }
 
 void pomo_settings(){
-    if(button_3.getState()){ 
+    if(button_3.getState()){
+        tone(buzzerPin, 1000, 100); 
         settingsPosition++; 
         if(settingsPosition > 4){
             settingsPosition = 0; 
@@ -361,6 +359,7 @@ void select_longBreakDelay(){
 void select_exit_and_save(){
     pomo_settings_display2();
     if(button_1.getState()){
+        tone(buzzerPin, 1000, 100);
         if(workTime != EEPROM.read(0)){
             EEPROM.write(0, workTime);
             EEPROM.commit();

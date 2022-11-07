@@ -1,9 +1,12 @@
 #include "incLibOne.h"
 
-button button_1IncLibOne(14, 150); 
-button button_2IncLibOne(27, 150); 
+button button_1IncLibOne(25, 150); 
+button button_2IncLibOne(26, 150); 
 
-incLibOne::incLibOne(){
+//SE LE ASIGNA AL CONSTRUCTOR EL PIN DEL BUZZER
+incLibOne::incLibOne(byte buzzerPin){
+    _buzzerPin = buzzerPin; 
+    pinMode(_buzzerPin, OUTPUT); 
 }
 
 void incLibOne::incThisVar(int varInc){
@@ -14,9 +17,11 @@ void incLibOne::process(){
     //LEE EL ESTADO DEL PULSADOR Y EN BASE A ESO INCREMENTA/DECREMENTA LA VARIABLE
     if(button_1IncLibOne.getState()){
         _varInc++;
+        tone(_buzzerPin, 1000, 100);
     }
     if(button_2IncLibOne.getState()){
         _varInc--; 
+        tone(_buzzerPin, 1000, 100);
     }
     // SI LA VARIABLE SUPERA CIERTO VALOR VUELVE A 0
     if(_varInc < 0){
