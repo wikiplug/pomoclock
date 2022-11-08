@@ -8,23 +8,36 @@ void handleRoot()
 }
 
 void setupWiFi(){
-  WiFi.mode(WIFI_STA); //es un set mode, el esp está preterminado en STA+AP
-  WiFiManager wm; //Creamos la instancia o al modo de configuración: "); //LCD
-  Serial.println(WiFi.softAPIP());
-  Serial.println ("Configurar wifi"); //LCD
-  wm.setConfigPortalTimeout(180); //Se establece un tiempo de espera para evitar que el ESP no se cuelgue a ser configurado en caso de un corte de suministro electrico. 
-  if(!wm.autoConnect("RED-ESP32")){
-        Serial.print("No hay datos guardados");} //Si no hay datos guardados, wm levanta un AP. LCD
-  else { 
-          Serial.print ("Existen datos guardados");} //Nos conectamos de forma automática. LCD
-          wifi= WiFi.SSID();
-          Serial.println ("Conectado a la red Wifi: "); //LCD
-          Serial.println(wifi);
-          ip = WiFi.localIP();
-          Serial.print("IP: "); //LCD
-          Serial.println(ip);
-          server.on("/", handleRoot);
-          server.begin(); webSocket.begin();
+    WiFi.mode(WIFI_STA); //es un set mode, el esp está preterminado en STA+AP
+    WiFiManager wm; //Creamos la instancia o al modo de configuración: "); //LCD
+    wm.setConfigPortalTimeout(180); //Se establece un tiempo de espera para evitar que el ESP no se cuelgue a ser configurado en caso de un corte de suministro electrico. 
+    
+    //Si no hay datos guardados, wm levanta un AP. LCD
+    if(!wm.autoConnect("RED-ESP32")){    
+        lcd.setCursor(0, 1);
+        lcd.print("no connection");
+        delay(1000); 
+        lcd.clear();
+        } 
+    else{ 
+        lcd.setCursor(0, 1);
+        lcd.print("connected");
+        delay(1000); 
+        lcd.clear();
+        } 
+        //Nos conectamos de forma automática. LCD
+        wifi = WiFi.SSID();
+        lcd.setCursor(0, 0);
+        lcd.print ("network: "); //LCD
+        lcd.print(wifi);
+        ip = WiFi.localIP();
+        lcd.setCursor(0, 1);
+        lcd.print("IP: "); //LCD
+        lcd.print(ip);
+        server.on("/", handleRoot);
+        server.begin(); webSocket.begin();
+        delay(2000);
+        lcd.clear();
 }
 
 void loopWiFi(){
@@ -64,7 +77,7 @@ void setup(){
     lcd.clear();           //Limpiamos la pantalla
     
     pinMode(pomoSwitch, INPUT); 
-    
+    pinMode(buzzerPin, OUTPUT);
     // //activa todas las funciones de configuración inicial del equipo si esta en "1"!
     // firstON = EEPROM.read(4); 
     // if(firstON == true){
@@ -75,13 +88,21 @@ void setup(){
     // }
     setupWiFi(); 
 }
-
+byte lcdStandardState; 
 void loop(){
     loopWiFi(); 
     hour(); 
+    
     if(pomoSwitchRead == LOW){
-        lcdStandard();
-    } 
+        lcdStandard(); 
+    }
+    else{
+        if(lcdStandardState = true){
+            lcd.clear(); 
+            lcdStandardState = false;
+        }
+    }
+
     alarms(); 
     pomodoro();
 }
@@ -93,14 +114,24 @@ void hour(){
 }
 
 void lcdStandard(){
+    lcdStandardState = true;
     DateTime fecha = rtc.now();
-    lcd.setCursor(0, 0);
+    lcd.setCursor(1, 0);
+    if(fecha.day() < 10){
+        lcd.print("0");  
+    }
     lcd.print(fecha.day()); 
     lcd.print("/");
+    if(fecha.month() < 10){
+        lcd.print("0");
+    }
     lcd.print(fecha.month());
     lcd.print("/");
-    lcd.print(fecha.year()); 
+    lcd.print(fecha.year());
+    lcd.setCursor(1, 1);
+    lcd.print(ip);  
 }
+
 int AlarmHour;
 int AlarmMinute;
 void alarms(){
@@ -116,7 +147,7 @@ void alarms(){
 // SE SEGMENTA EL CODIGO EN BLOQUES PARA FACILITAR SU LEGIBILIDAD Y PROGRAMACION
 void pomodoro(){ 
     pomoSwitchRead = digitalRead(pomoSwitch);
-    if(pomoSwitchRead == HIGH){
+    if(pomoSwitchRead == HIGH){ 
         lcdCleanerPomodoro = true; 
         if(startPomo == false && settingsPomo == false){ 
             pomo_menu();

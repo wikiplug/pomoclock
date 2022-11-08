@@ -56,7 +56,7 @@ WebSocketsServer webSocket = WebSocketsServer(81);
 #define CLK 16				
 #define DIO 17		
 
-#define buzzerPin 32
+#define buzzerPin 18
 #define pomoSwitch 33
 
 #define EEPROM_SIZE 512
