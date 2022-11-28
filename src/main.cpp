@@ -37,6 +37,7 @@ void handleRoot(AsyncWebServerRequest *request)
 
 void hora_pagina()
 {
+    DateTime fecha = rtc.now();
     server.on("/tiempo", HTTP_GET, [](AsyncWebServerRequest *request)
               {
     if (request->hasParam(PARAM_HORA)) {
@@ -57,7 +58,14 @@ void hora_pagina()
     //-------------------------------CONVERSIÓN A VALORES EN INT------------------------------------------------
     h_time = inputMessage4.toInt();
     m_time = inputMessage5.toInt();
-    set_time = buttonMessage3.toInt(); });
+    set_time = buttonMessage3.toInt(); 
+    EEPROM.write(19, h_time);
+    EEPROM.commit();
+    EEPROM.write(20, m_time);
+    EEPROM.commit();
+    
+    rtc.adjust(DateTime(yearConfig, monthConfig, dayConfig, h_time, m_time, 00));
+    });
 }
 
 void alarmas_pagina () {
@@ -96,6 +104,7 @@ void alarmas_pagina () {
         m = inputMessage2.toInt();
         b1 = buttonMessage1.toInt();
         alarma = inputMessage3.toInt();
+        lcd.clear(); 
     });
 }
 
@@ -229,6 +238,12 @@ void setup(){
     minuteAlarmFour = EEPROM.read(14);
     stateAlarmFour = EEPROM.read(15);  
 
+    dayConfig = EEPROM.read(16);
+    monthConfig = EEPROM.read(17); 
+    yearConfig = EEPROM.read(18);
+
+    h_time = EEPROM.read(19);
+    m_time = EEPROM.read(20);
     //DHT 11 (SENSOR DE TEMPERATURA)
     // pinMode(humLED, OUTPUT);
     // pinMode(SW, INPUT);
@@ -239,7 +254,6 @@ void setup(){
         Serial.println("Modulo RTC no encontrado !");	// muestra mensaje de error
         while (1);					// bucle infinito que detiene ejecucion del programa
     }
-    rtc.adjust(DateTime(__DATE__, __TIME__)); //TEMPORAL
     
     display.setBrightness(1);
 
@@ -281,12 +295,15 @@ void setup(){
 byte alarmsMenuState; 
 void loop(){ 
     hour(); 
+    alarms(); 
 
     if(alarmsMenuState == true){
         alarmsMenu(); 
     }
-
-    if(pomoSwitchRead == LOW && alarmsMenuState == false){
+    if(configDateState == true){
+        configDate(); 
+    }
+    if(pomoSwitchRead == LOW && alarmsMenuState == false && configDateState == false){
         lcdStandard(); 
     }
     else{
@@ -295,8 +312,7 @@ void loop(){
             lcdStandardState = false;
         }
     }
-    
-    alarms(); 
+
     pomodoro();
 }
 
@@ -307,10 +323,13 @@ void hour(){
 
     display.showNumberDecEx(hourRTC, 0b01000000, true, 2, 0); 
     display.showNumberDec(minutesRTC, true, 2, 2); 
+
+    
 }
  
 void lcdStandard(){
     if(button_2.getState() || settingsState == true){
+        menuCleaner = true; 
         if(settingsState == false){
             tone(buzzerPin, 1000, 100);
             lcd.clear(); 
@@ -360,7 +379,7 @@ void menu(){
     if(button_3.getState()){ 
         tone(buzzerPin, 1000, 100); 
         position++;  
-        if(position > 2){
+        if(position > 3){
             position = 0; 
         }
         lcd.clear();
@@ -374,8 +393,11 @@ void menu(){
             seeAlarms();
             break; 
         case 2:
-            exit_menu(); 
+            configDateOption();  
             break; 
+        case 3: 
+            exit_menu();
+            break;
     }
 }
 
@@ -383,19 +405,21 @@ void menu_display(){
     lcd.setCursor(0, position); 
     lcd.print("-");
     lcd.setCursor(2, 0); 
-    lcd.print("forget network");
+    lcd.print("forget network.");
     lcd.setCursor(2, 1); 
-    lcd.print("see alarms");
+    lcd.print("show alarms.");
     lcd.setCursor(2, 2); 
-    lcd.print("exit");
+    lcd.print("config date.");
+    lcd.setCursor(2, 3);
+    lcd.print("exit.");
 }
 
 void deleteSSID(){
     menu_display(); 
     if(button_1.getState()){
         tone(buzzerPin, 1000, 100); 
-        // WiFiManager wm; //Se crea nuevamente la instancia del wm para el reset.
-        // wm.resetSettings();
+        WiFiManager wm; //Se crea nuevamente la instancia del wm para el reset.
+        wm.resetSettings();
         lcd.clear();
         lcd.setCursor(2, 2); 
         lcd.print("NETWORK FORGETED"); 
@@ -413,6 +437,15 @@ void seeAlarms(){
     }
 }
 
+void configDateOption(){
+    menu_display();
+    if(button_1.getState()){
+        lcd.clear();
+        delay(200);
+        configDateState = true; 
+    }
+}
+
 void exit_menu(){
     menu_display(); 
     if(button_1.getState()){
@@ -424,52 +457,55 @@ void exit_menu(){
 }
 
 void alarmsMenu(){
-    if(button_3.getState()){
-        alarmsMenuState = false; 
-        lcd.clear();
-        delay(200); 
-    }
     lcd.setCursor(0, 0); 
     lcd.print("h: "); 
     lcd.print(hourAlarmOne);
-    lcd.print(" - m: ");
+    lcd.setCursor(5, 0); 
+    lcd.print("m: ");
     lcd.print(minuteAlarmOne);
-    lcd.print(" - s: ");
+    lcd.setCursor(11, 0); 
+    lcd.print("state: ");
     lcd.print(stateAlarmOne); 
 
     lcd.setCursor(0, 1); 
     lcd.print("h: "); 
     lcd.print(hourAlarmTwo);
-    lcd.print(" - m: ");
+    lcd.setCursor(5, 1); 
+    lcd.print("m: ");
     lcd.print(minuteAlarmTwo);
-    lcd.print(" - s: ");
+    lcd.setCursor(11, 1); 
+    lcd.print("state: ");
     lcd.print(stateAlarmTwo);
+
 
     lcd.setCursor(0, 2); 
     lcd.print("h: "); 
     lcd.print(hourAlarmThree);
-    lcd.print(" - m: ");
+    lcd.setCursor(5, 2); 
+    lcd.print("m: ");
     lcd.print(minuteAlarmThree);
-    lcd.print(" - s: ");
+    lcd.setCursor(11, 2); 
+    lcd.print("state: ");
     lcd.print(stateAlarmThree);
 
     lcd.setCursor(0, 3); 
     lcd.print("h: "); 
     lcd.print(hourAlarmFour);
-    lcd.print(" - m: ");
+    lcd.setCursor(5, 3); 
+    lcd.print("m: ");
     lcd.print(minuteAlarmFour);
-    lcd.print(" - s: ");
+    lcd.setCursor(11, 3); 
+    lcd.print("state: ");
     lcd.print(stateAlarmFour);
-}
-void alarms(){
-    //desactiva variable que apaga la alarma
-    if(alarmOFF == true){
-        alarmOnOff.init(60000);
-        if(alarmOnOff.delay()){
-            alarmOFF = false;
-        }
-    }
 
+    if(button_3.getState()){
+        alarmsMenuState = false; 
+        lcd.clear();
+        delay(200); 
+    }
+}
+
+void alarms(){
     //almaceno las alarmas en distintos "slots"
     switch (alarma)
     {
@@ -559,13 +595,116 @@ void alarms(){
     alarm_four.alarmTriggered();
 }
 
+byte configDatePosition;
+void configDate(){
+    if(button_3.getState()){
+        configDatePosition++;
+        lcd.clear(); 
+        if(configDatePosition > 3){
+            configDatePosition = 0;
+        }
+    }
+
+    switch (configDatePosition)
+    {
+    case 0:
+        configDay(); 
+        break;
+    
+    case 1:
+        configMonth();
+        break;
+    
+    case 2:
+        configYear();
+        break; 
+    
+    case 3: 
+        exitConfigDate();
+        break;    
+    }
+}
+
+void configDateDisplay(){
+    lcd.setCursor(0, configDatePosition);
+    lcd.print("-");
+    lcd.setCursor(2, 0);
+    lcd.print("day: ");
+    lcd.print(dayConfig);
+    lcd.setCursor(2, 1);
+    lcd.print("month: "); 
+    lcd.print(monthConfig); 
+    lcd.setCursor(2, 2);
+    lcd.print("year: "); 
+    lcd.print(2000 + yearConfig);
+    lcd.setCursor(2, 3);
+    lcd.print("exit."); 
+}
+
+
+
+void configDay(){
+    incLibConfigDay.incThisVar(dayConfig, 31); 
+    if(incLibConfigDay.lcdValue()){
+        lcd.clear();
+    }
+    dayConfig = incLibConfigDay.varValue();
+    configDateDisplay(); 
+}
+
+void configMonth(){
+    incLibConfigMonth.incThisVar(monthConfig, 12);
+    if(incLibConfigMonth.lcdValue()){
+        lcd.clear();
+    }
+    monthConfig = incLibConfigMonth.varValue();
+    configDateDisplay(); 
+}
+
+void configYear(){
+    incLibConfigYear.incThisVar(yearConfig, 999); 
+    if(incLibConfigYear.lcdValue()){
+        lcd.clear();
+    }
+    yearConfig = incLibConfigYear.varValue();
+    configDateDisplay(); 
+}
+
+
+void exitConfigDate(){
+    configDateDisplay(); 
+    if(button_1.getState()){
+        //actualiza los datos de la fecha.
+        rtc.adjust(DateTime(2000 + yearConfig, monthConfig, dayConfig, h_time, m_time, 00));
+        configDateState = false; 
+        EEPROM.write(dayConfig, 16);
+        EEPROM.commit();
+        EEPROM.write(monthConfig, 17);
+        EEPROM.commit(); 
+        EEPROM.write(yearConfig, 18);
+        EEPROM.commit(); 
+        lcd.clear();
+        delay(250);
+    }
+}
 // EN ESTA FUNCIÓN SE CORROBORA SI SE ACTIVA LA OPCION POMODORO O NO
 // A SU VEZ, EJECUTA TODAS LAS FUNCIONES QUE CORREN DENTRO DEL POMODORO
 // SE SEGMENTA EL CODIGO EN BLOQUES PARA FACILITAR SU LEGIBILIDAD Y PROGRAMACION
 void pomodoro(){ 
     pomoSwitchRead = digitalRead(pomoSwitch);
     if(pomoSwitchRead == HIGH){ 
-        alarmsMenuState = false; 
+        if(configDateState == true){
+            lcd.clear(); 
+            configDateState = false; 
+        }
+        if(alarmsMenuState == true){
+            lcd.clear(); 
+            alarmsMenuState = false;
+        } 
+        if(menuCleaner == true){
+            lcd.clear();
+            menuCleaner = false;
+        }
         lcdCleanerPomodoro = true; 
         if(startPomo == false && settingsPomo == false){ 
             pomo_menu();
@@ -650,7 +789,7 @@ void pomo_menu_display(){
 }
 
 void select_sessions(){
-    incLibSessions.incThisVar(sessions);
+    incLibSessions.incThisVar(sessions, 99);
     if(incLibSessions.lcdValue()){
         lcd.clear(); 
     }
@@ -660,6 +799,7 @@ void select_sessions(){
 }
 
 void select_settings(){
+    finishTime();
     pomo_menu_display();
     if(button_1.getState()){
         tone(buzzerPin, 1000, 100);
@@ -671,6 +811,7 @@ void select_settings(){
 }
 
 void select_start(){
+    finishTime();
     pomo_menu_display();
     if(button_1.getState()){
         tone(buzzerPin, 1000, 100);
@@ -797,7 +938,7 @@ void select_longBreak(){
 }
 
 void select_longBreakDelay(){
-    incLibLongBreakDelay.incThisVar(longBreakDelay);
+    incLibLongBreakDelay.incThisVar(longBreakDelay, 99);
     if(incLibLongBreakDelay.lcdValue()){
         lcd.clear();
     }

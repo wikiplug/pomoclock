@@ -56,6 +56,17 @@ void work_or_break();
 void pomodoro_timer();
 void pause_pomodoro(); 
 
+//config date
+void configDate(); 
+void configDay();
+void configMonth(); 
+void configYear(); 
+void exitConfigDate();  
+void configDateOption(); 
+int dayConfig;
+int monthConfig; 
+int yearConfig; 
+
 //DUAL CORE
 TaskHandle_t Task2;
 
@@ -119,7 +130,7 @@ byte lcdStandardState;
 byte settingsState;
 //menu
 byte position;
-
+byte menuCleaner; 
 //alarmas 
 byte hourAlarmOne; 
 byte minuteAlarmOne; 
@@ -134,6 +145,10 @@ byte stateAlarmOne;
 byte stateAlarmTwo; 
 byte stateAlarmThree; 
 byte stateAlarmFour; 
+
+
+//config date
+byte configDateState; 
 
 
 //pomodoro

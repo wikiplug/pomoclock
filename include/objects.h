@@ -14,6 +14,10 @@ blinkMenu blinkMenu3;
 //incLib 1
 incLibOne incLibSessions(32);
 incLibOne incLibLongBreakDelay(32);
+incLibOne incLibConfigDay(32);
+incLibOne incLibConfigMonth(32);
+incLibOne incLibConfigYear(32);
+
 
 // incLib 5
 incLib incLibWorkTime(32);

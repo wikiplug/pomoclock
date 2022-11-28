@@ -9,8 +9,9 @@ incLibOne::incLibOne(byte buzzerPin){
     pinMode(_buzzerPin, OUTPUT); 
 }
 
-void incLibOne::incThisVar(int varInc){
+void incLibOne::incThisVar(int varInc, int max){
     _varInc = varInc;
+    _max = max; 
 }
 
 void incLibOne::process(){ 
@@ -28,9 +29,9 @@ void incLibOne::process(){
         _lcdClear = true; 
         _varInc = 0;
     }
-    if(_varInc > 99){
+    if(_varInc > _max){
         _lcdClear = true; 
-        _varInc = 99;
+        _varInc = _max;
     }
     // CUANDO CAMBIA DE CENTENAS A DECENAS, DECENAS A UNIDADES, ETC. LCD.CLEAR = HIGH
     else if((_varInc == 9 && _k == 10)|| (_varInc == 99 && _k == 100)){
