@@ -2,56 +2,206 @@
 #include "objects.h"
 #include "webpage.h"
 
-void handleRoot()
+uint8_t check[] = {
+    B00000,
+    B00000,
+    B00001,
+    B00010,
+    B10100,
+    B01000,
+    B00000,
+    B00000
+};
+
+uint8_t temp[] = {
+  B00111,
+  B00101,
+  B00111,
+  B00000,
+  B00000,
+  B00000,
+  B00000,
+  B00000
+};
+ 
+WebSocketsServer webSocket = WebSocketsServer(81);
+AsyncWebServer server(80);
+
+IPAddress ip; // Creamos el objeto para la dirección IP.
+String wifi; //se almacena los valores de WiFi.SSID().
+
+void handleRoot(AsyncWebServerRequest *request)
 {
-  server.send(200,"text/html", webpageCont);
+    request->send(200, "text/html", pomoclock);
+}
+
+void hora_pagina()
+{
+    server.on("/tiempo", HTTP_GET, [](AsyncWebServerRequest *request)
+              {
+    if (request->hasParam(PARAM_HORA)) {
+      inputMessage4 = request->getParam(PARAM_HORA)->value();//OBTENEMOS VALOR HORA
+      inputParam = PARAM_HORA;
+    }
+    if (request->hasParam(PARAM_MIN)) {
+      inputMessage5 = request->getParam(PARAM_MIN)->value();//OBTENEMOS VALOR HORA
+      inputParam = PARAM_MIN;
+    }
+    if (request->hasParam(PARAM_SET)) {
+      buttonMessage3 = request->getParam(PARAM_SET)->value();//OBTENEMOS VALOR HORA
+      inputParam = PARAM_SET;
+    }
+
+    request->send(200, "text/html", pomoclock);//REDIRECCIÓN A LA PÁGINA PRINCIPAL
+
+    //-------------------------------CONVERSIÓN A VALORES EN INT------------------------------------------------
+    h_time = inputMessage4.toInt();
+    m_time = inputMessage5.toInt();
+    set_time = buttonMessage3.toInt(); });
+}
+
+void alarmas_pagina () {
+    server.on("/alarma", HTTP_GET, [](AsyncWebServerRequest *request) { // SOLICITUD PARA LAS ALARMAS
+        if (request->hasParam(HOUR_ALARM))
+        {
+            inputMessage = request->getParam(HOUR_ALARM)->value(); // OBTENEMOS VALOR HORA
+            inputParam = HOUR_ALARM;
+        }
+
+        if (request->hasParam(MIN_ALARM))
+        {
+            inputMessage2 = request->getParam(MIN_ALARM)->value(); // OBTENEMOS VALOR MINUTO
+            inputParam = MIN_ALARM;
+        }
+
+        if (request->hasParam(PARAM_BUTTON1))
+        {
+            buttonMessage1 = request->getParam(PARAM_BUTTON1)->value();
+            inputParam = PARAM_BUTTON1;
+        }
+        if (request->hasParam(PARAM_BUTTON2))
+        {
+            buttonMessage2 = request->getParam(PARAM_BUTTON2)->value();
+            inputParam = PARAM_BUTTON2;
+        }
+        if (request->hasParam(PARAM_ALARM))
+        {
+            inputMessage3 = request->getParam(PARAM_ALARM)->value();
+            inputParam = PARAM_ALARM;
+        }
+        request->send(200, "text/html", pomoclock); ////REDIRECCIÓN A LA PÁGINA PRINCIPAL
+
+        //-------------------------------CONVERSIÓN A VALORES EN INT------------------------------------------------
+        h = inputMessage.toInt();
+        m = inputMessage2.toInt();
+        b1 = buttonMessage1.toInt();
+        alarma = inputMessage3.toInt();
+    });
+}
+
+
+//CDIGO SEMI-INUTIL
+void webSocketEvent(uint8_t num, WStype_t type, uint8_t *payload, size_t welength)
+{
+  String payloadString = (const char *)payload;
+  //--------------------------------------------------
+  if(type == WStype_TEXT) //receive text from client
+  {
+    byte separator=payloadString.indexOf('=');
+    String var = payloadString.substring(0,separator);
+    String val = payloadString.substring(separator+1);
+  
+  //ESTO ES LO INUTIL
+    if(var == "LEDonoff")
+    {
+      LEDonoff = false;
+      if(val == "ON") LEDonoff = true;
+    }
+}
 }
 
 void setupWiFi(){
     WiFi.mode(WIFI_STA); //es un set mode, el esp está preterminado en STA+AP
     WiFiManager wm; //Creamos la instancia o al modo de configuración: "); //LCD
-    wm.setConfigPortalTimeout(180); //Se establece un tiempo de espera para evitar que el ESP no se cuelgue a ser configurado en caso de un corte de suministro electrico. 
+    wm.setConfigPortalTimeout(180); //Se establece un tiempo de espera para evitar que el ESP no se cuelgue a ser configurado
+
+    lcd.setCursor(0, 0);
+    lcd.print("Connecting pomoclock");
+    lcd.setCursor(0, 1); 
+    lcd.print("to a wifi network...");
+    delay(3000); 
+    lcd.clear();
+
+    lcd.setCursor(0, 0);
+    lcd.print("Pomoclock network: ");
+    lcd.setCursor(19, 0); 
+    lcd.print((char)0x01); 
+    lcd.setCursor(0, 2);
+    lcd.print("Join to the network");
+    lcd.setCursor(0, 3); 
+    lcd.print("with your phone :)");
     
     //Si no hay datos guardados, wm levanta un AP. LCD
-    if(!wm.autoConnect("RED-ESP32")){    
-        lcd.setCursor(0, 1);
-        lcd.print("no connection");
-        delay(1000); 
-        lcd.clear();
+    if(!wm.autoConnect("POMOCLOCK")){  
+        lcd.clear();   
+        lcd.setCursor(1, 1);
+        lcd.print("CONNECTION FAILED.");  
+        lcd.setCursor(0, 3); 
+        lcd.print("Restart to try again"); 
+        delay(5000); 
+        lcd.clear(); 
         } 
+        
     else{ 
-        lcd.setCursor(0, 1);
-        lcd.print("connected");
-        delay(1000); 
-        lcd.clear();
-        } 
-        //Nos conectamos de forma automática. LCD
-        wifi = WiFi.SSID();
+        lcd.clear(); 
         lcd.setCursor(0, 0);
-        lcd.print ("network: "); //LCD
+        lcd.print("--CONNECTED--");
+        wifi = WiFi.SSID();
+        lcd.setCursor(0, 1);
+        lcd.print ("network: ");
         lcd.print(wifi);
         ip = WiFi.localIP();
-        lcd.setCursor(0, 1);
-        lcd.print("IP: "); //LCD
-        lcd.print(ip);
+        lcd.setCursor(0, 2);
+        lcd.print("IP: "); 
+        lcd.print(ip); 
         server.on("/", handleRoot);
-        server.begin(); webSocket.begin();
-        delay(2000);
+        hora_pagina(); // función dedicado a imprimir el valor del tiempo
+        alarmas_pagina(); //función dedicado a imprimir el valor de las alarmas
+        server.begin(); 
+        webSocket.begin();
+        webSocket.onEvent(webSocketEvent);
+        delay(5000);
         lcd.clear();
+    }
 }
 
-void loopWiFi(){
-  webSocket.loop(); server.handleClient();
-//====================================================================
-//Función para resetear(borrar)credenciales de red(ingresando'a'en el monitor serie)
-//====================================================================
-  char option = ' ';
-    if(Serial.available() != 0){
-      option = Serial.read(); 
-    if(option == 'a'){
-      WiFiManager wm; //Se crea nuevamente la instancia del wm para el reset.
-      wm.resetSettings();  
-      Serial.println ("Reiniciar equipo");} //LCD
+void loopWiFi(void *pvParameters)
+{
+    for (;;)
+    { // permite el dual core
+        webSocket.loop();
+        //-----------------------------------------------
+        static unsigned long l = 0;
+        unsigned long t = millis();
+        if ((t - l) > 1000)
+        {
+            if (LEDonoff == false)
+                digitalWrite(LED, LOW);
+            else
+                digitalWrite(LED, HIGH);
+            String LEDstatus = "OFF";
+            if (LEDonoff == true)
+                LEDstatus = "ON";
+            //-----------------------------------------------
+            String TEMPvalString = String(temperature);
+            String HUMvalString = String(humidity);
+            //-----------------------------------------------
+            JSONtxt = "{\"TEMP\":\"" + TEMPvalString + "\",";
+            JSONtxt += "\"HUM\":\"" + HUMvalString + "\",";
+            JSONtxt += "\"LEDonoff\":\"" + LEDstatus + "\"}";
+            webSocket.broadcastTXT(JSONtxt);
+        }
+        // vTaskDelay(10);
     }
 }
 
@@ -59,26 +209,49 @@ void setup(){
     Serial.begin(115200);
 
     EEPROM.begin(EEPROM_SIZE);
+    
+    //pomodoro 
     workTime = EEPROM.read(0);  
     shortBreakTime = EEPROM.read(1);
     longBreakTime = EEPROM.read(2); 
     longBreakDelay = EEPROM.read(3); 
     
-    if (! rtc.begin()) {				// si falla la inicializacion del modulo RTC
+    hourAlarmOne = EEPROM.read(4);
+    minuteAlarmOne = EEPROM.read(5);
+    stateAlarmOne = EEPROM.read(6); 
+    hourAlarmTwo = EEPROM.read(7);
+    minuteAlarmTwo = EEPROM.read(8);
+    stateAlarmTwo = EEPROM.read(9); 
+    hourAlarmThree = EEPROM.read(10);
+    minuteAlarmThree = EEPROM.read(11);
+    stateAlarmThree = EEPROM.read(12);  
+    hourAlarmFour = EEPROM.read(13); 
+    minuteAlarmFour = EEPROM.read(14);
+    stateAlarmFour = EEPROM.read(15);  
+
+    //DHT 11 (SENSOR DE TEMPERATURA)
+    // pinMode(humLED, OUTPUT);
+    // pinMode(SW, INPUT);
+    
+    dht.begin();
+
+    if (! rtc.begin()) {				// si falla la inicializacion del modulo
         Serial.println("Modulo RTC no encontrado !");	// muestra mensaje de error
         while (1);					// bucle infinito que detiene ejecucion del programa
     }
     rtc.adjust(DateTime(__DATE__, __TIME__)); //TEMPORAL
-
+    
     display.setBrightness(1);
 
     lcd.begin(20, 4);      //Iniciamos el lcd
     lcd.backlight();       //Encendemos la luz de fondo
     lcd.clear();           //Limpiamos la pantalla
-    
+    lcd.createChar(1, check);
+    lcd.createChar(2, temp); 
+
     pinMode(pomoSwitch, INPUT); 
     pinMode(buzzerPin, OUTPUT);
-    // //activa todas las funciones de configuración inicial del equipo si esta en "1"!
+    //activa todas las funciones de configuración inicial del equipo si esta en "1"!
     // firstON = EEPROM.read(4); 
     // if(firstON == true){
     //     firstON = false; 
@@ -86,60 +259,304 @@ void setup(){
     //     EEPROM.commit();
     //     //AGREGAR FUNCIONES DE INICIO (WIFI MANAGER, ETC.) TENER EN CUENTA METER TODO EN UN WHILE
     // }
-    setupWiFi(); 
-}
-byte lcdStandardState; 
-void loop(){
-    loopWiFi(); 
-    hour(); 
     
-    if(pomoSwitchRead == LOW){
+    //pantalla de "arranque"
+    lcd.setCursor(6, 1);
+    lcd.print("WELCOME.");
+    delay(3000);
+    lcd.clear(); 
+
+    setupWiFi(); 
+    
+    //inicializamos el dual core
+    xTaskCreatePinnedToCore(
+        loopWiFi,   /* Task function. */
+        "Task2",     /* name of task. */
+        10000,       /* Stack size of task */
+        NULL,        /* parameter of the task */
+        0,           /* priority of the task */
+        &Task2,      /* Task handle to keep track of created task */
+        0);          /* pin task to core 1 */
+}
+byte alarmsMenuState; 
+void loop(){ 
+    hour(); 
+
+    if(alarmsMenuState == true){
+        alarmsMenu(); 
+    }
+
+    if(pomoSwitchRead == LOW && alarmsMenuState == false){
         lcdStandard(); 
     }
     else{
-        if(lcdStandardState = true){
+        if(lcdStandardState == true){
             lcd.clear(); 
             lcdStandardState = false;
         }
     }
-
+    
     alarms(); 
     pomodoro();
 }
 
 void hour(){
     DateTime fecha = rtc.now();
-    display.showNumberDecEx(fecha.hour(), 0b01000000, true, 2, 0); 
-    display.showNumberDec(fecha.minute(), true, 2, 2); 
-}
+    hourRTC = fecha.hour();
+    minutesRTC = fecha.minute(); 
 
+    display.showNumberDecEx(hourRTC, 0b01000000, true, 2, 0); 
+    display.showNumberDec(minutesRTC, true, 2, 2); 
+}
+ 
 void lcdStandard(){
-    lcdStandardState = true;
-    DateTime fecha = rtc.now();
-    lcd.setCursor(1, 0);
-    if(fecha.day() < 10){
-        lcd.print("0");  
+    if(button_2.getState() || settingsState == true){
+        if(settingsState == false){
+            tone(buzzerPin, 1000, 100);
+            lcd.clear(); 
+            
+        }
+        menu(); 
     }
-    lcd.print(fecha.day()); 
-    lcd.print("/");
-    if(fecha.month() < 10){
-        lcd.print("0");
-    }
-    lcd.print(fecha.month());
-    lcd.print("/");
-    lcd.print(fecha.year());
-    lcd.setCursor(1, 1);
-    lcd.print(ip);  
-}
+    else{
+        lcdStandardState = true;
+        
+        //imprimimos la temperatura y humedad de la sala
+        lectureTemp.init(3000); 
+        if(lectureTemp.delay()){
+            temperature = dht.readTemperature();
+            humidity = dht.readHumidity() - 50.00;
+        }     
+         
+        lcd.setCursor(0, 0); 
+        lcd.print(temperature); 
+        lcd.print((char)0x02); 
+        lcd.print("C"); 
+        lcd.setCursor(0, 1);
+        lcd.print(humidity); 
+        lcd.print("%");  
 
-int AlarmHour;
-int AlarmMinute;
-void alarms(){
-    DateTime fecha = rtc.now();
-    if(fecha.hour() == AlarmHour && fecha.minute() == AlarmMinute){
-        //genero un tono. INTERRUMPO CUALQUIER COSA QUE ESTE OCURRIENDO E IMPRIMO MENSAJE EN PANTALLA. 
+        DateTime fecha = rtc.now();
+        lcd.setCursor(10, 0);
+        if(fecha.day() < 10){
+            lcd.print("0");  
+        }
+        lcd.print(fecha.day()); 
+        lcd.print("/");
+        if(fecha.month() < 10){
+            lcd.print("0");
+        }
+        lcd.print(fecha.month());
+        lcd.print("/");
+        lcd.print(fecha.year());
+        lcd.setCursor(0, 3);
+        lcd.print("IP: "); 
+        lcd.print(ip);
+    }
+}
+ 
+void menu(){
+    settingsState = true; 
+    if(button_3.getState()){ 
+        tone(buzzerPin, 1000, 100); 
+        position++;  
+        if(position > 2){
+            position = 0; 
+        }
+        lcd.clear();
     }
     
+    switch(position){
+        case 0:
+            deleteSSID(); 
+            break;
+        case 1:
+            seeAlarms();
+            break; 
+        case 2:
+            exit_menu(); 
+            break; 
+    }
+}
+
+void menu_display(){
+    lcd.setCursor(0, position); 
+    lcd.print("-");
+    lcd.setCursor(2, 0); 
+    lcd.print("forget network");
+    lcd.setCursor(2, 1); 
+    lcd.print("see alarms");
+    lcd.setCursor(2, 2); 
+    lcd.print("exit");
+}
+
+void deleteSSID(){
+    menu_display(); 
+    if(button_1.getState()){
+        tone(buzzerPin, 1000, 100); 
+        // WiFiManager wm; //Se crea nuevamente la instancia del wm para el reset.
+        // wm.resetSettings();
+        lcd.clear();
+        lcd.setCursor(2, 2); 
+        lcd.print("NETWORK FORGETED"); 
+        delay(3000);
+        ESP.restart();
+    }
+}
+
+void seeAlarms(){
+    menu_display();
+    if(button_1.getState()){
+        lcd.clear(); 
+        delay(200); 
+        alarmsMenuState = true; 
+    }
+}
+
+void exit_menu(){
+    menu_display(); 
+    if(button_1.getState()){
+        tone(buzzerPin, 1000, 100); 
+        settingsState = false; 
+        lcd.clear(); 
+        delay(250); 
+    }
+}
+
+void alarmsMenu(){
+    if(button_3.getState()){
+        alarmsMenuState = false; 
+        lcd.clear();
+        delay(200); 
+    }
+    lcd.setCursor(0, 0); 
+    lcd.print("h: "); 
+    lcd.print(hourAlarmOne);
+    lcd.print(" - m: ");
+    lcd.print(minuteAlarmOne);
+    lcd.print(" - s: ");
+    lcd.print(stateAlarmOne); 
+
+    lcd.setCursor(0, 1); 
+    lcd.print("h: "); 
+    lcd.print(hourAlarmTwo);
+    lcd.print(" - m: ");
+    lcd.print(minuteAlarmTwo);
+    lcd.print(" - s: ");
+    lcd.print(stateAlarmTwo);
+
+    lcd.setCursor(0, 2); 
+    lcd.print("h: "); 
+    lcd.print(hourAlarmThree);
+    lcd.print(" - m: ");
+    lcd.print(minuteAlarmThree);
+    lcd.print(" - s: ");
+    lcd.print(stateAlarmThree);
+
+    lcd.setCursor(0, 3); 
+    lcd.print("h: "); 
+    lcd.print(hourAlarmFour);
+    lcd.print(" - m: ");
+    lcd.print(minuteAlarmFour);
+    lcd.print(" - s: ");
+    lcd.print(stateAlarmFour);
+}
+void alarms(){
+    //desactiva variable que apaga la alarma
+    if(alarmOFF == true){
+        alarmOnOff.init(60000);
+        if(alarmOnOff.delay()){
+            alarmOFF = false;
+        }
+    }
+
+    //almaceno las alarmas en distintos "slots"
+    switch (alarma)
+    {
+    case 1:
+        hourAlarmOne = h;
+        minuteAlarmOne = m; 
+        stateAlarmOne = b1; 
+        if(hourAlarmOne != EEPROM.read(4)){
+            EEPROM.write(4, hourAlarmOne); 
+            EEPROM.commit(); 
+        }
+        if(minuteAlarmOne != EEPROM.read(5)){
+            EEPROM.write(5, minuteAlarmOne); 
+            EEPROM.commit(); 
+        }
+        if(stateAlarmOne != EEPROM.read(6)){
+            EEPROM.write(6, stateAlarmOne); 
+            EEPROM.commit(); 
+        }
+        break;
+    
+    case 2:
+        hourAlarmTwo = h; 
+        minuteAlarmTwo = m;
+        stateAlarmTwo = b1; 
+        if(hourAlarmTwo != EEPROM.read(7)){
+            EEPROM.write(7, hourAlarmTwo); 
+            EEPROM.commit(); 
+        }
+        if(minuteAlarmTwo != EEPROM.read(8)){
+            EEPROM.write(8, minuteAlarmTwo); 
+            EEPROM.commit(); 
+        }
+        if(stateAlarmTwo != EEPROM.read(9)){
+            EEPROM.write(9, stateAlarmTwo); 
+            EEPROM.commit(); 
+        }
+        break;
+    
+    case 3:
+        hourAlarmThree = h; 
+        minuteAlarmThree = m; 
+        stateAlarmThree = b1; 
+        if(hourAlarmThree != EEPROM.read(10)){
+            EEPROM.write(10, hourAlarmThree); 
+            EEPROM.commit(); 
+        }
+        if(minuteAlarmThree != EEPROM.read(11)){
+            EEPROM.write(11, minuteAlarmThree); 
+            EEPROM.commit(); 
+        }
+        if(stateAlarmThree != EEPROM.read(12)){
+            EEPROM.write(12, stateAlarmThree); 
+            EEPROM.commit(); 
+        }
+        break; 
+
+    case 4:
+        hourAlarmFour = h;
+        minuteAlarmFour = m; 
+        stateAlarmFour = b1;
+        if(hourAlarmFour != EEPROM.read(13)){
+            EEPROM.write(13, hourAlarmFour); 
+            EEPROM.commit(); 
+        }
+        if(minuteAlarmFour != EEPROM.read(14)){
+            EEPROM.write(14, minuteAlarmFour); 
+            EEPROM.commit(); 
+        }
+        if(stateAlarmFour != EEPROM.read(15)){
+            EEPROM.write(15, stateAlarmFour); 
+            EEPROM.commit(); 
+        }
+        break; 
+    }
+
+    alarm_one.setAlarm(hourRTC, minutesRTC, hourAlarmOne, minuteAlarmOne, stateAlarmOne); 
+    alarm_one.alarmTriggered();
+
+    alarm_two.setAlarm(hourRTC, minutesRTC, hourAlarmTwo, minuteAlarmTwo, stateAlarmTwo);
+    alarm_two.alarmTriggered(); 
+
+    alarm_three.setAlarm(hourRTC, minutesRTC, hourAlarmThree, minuteAlarmThree, stateAlarmThree);
+    alarm_three.alarmTriggered();
+
+    alarm_four.setAlarm(hourRTC, minutesRTC, hourAlarmFour, minuteAlarmFour, stateAlarmFour);
+    alarm_four.alarmTriggered();
 }
 
 // EN ESTA FUNCIÓN SE CORROBORA SI SE ACTIVA LA OPCION POMODORO O NO
@@ -148,6 +565,7 @@ void alarms(){
 void pomodoro(){ 
     pomoSwitchRead = digitalRead(pomoSwitch);
     if(pomoSwitchRead == HIGH){ 
+        alarmsMenuState = false; 
         lcdCleanerPomodoro = true; 
         if(startPomo == false && settingsPomo == false){ 
             pomo_menu();
@@ -406,7 +824,7 @@ void select_exit_and_save(){
         if(longBreakDelay != EEPROM.read(3)){
             EEPROM.write(3, longBreakDelay);
             EEPROM.commit(); 
-        }   
+        }
         
         settingsPomo = false;
         menuPosition = 0; 
@@ -436,6 +854,7 @@ void work_or_break(){
             startPomo = false; 
             pomodoroCountFinish = false; 
             workOrBreak._num = 0; 
+            breaksForLongBreak = 0; 
         }
     }
     if(pomodoroCountFinish == true || firstSession == true){
@@ -452,12 +871,12 @@ void work_or_break(){
         pomodoroCountFinish = false;
         breaksForLongBreak++;
         if(breaksForLongBreak == longBreakDelay){
-            statePomodoroLCD = 1; // LONG BREAK
+            statePomodoroLCD = 2; // LONG BREAK
             minutes = longBreakTime;
             breaksForLongBreak = 0;        
         }
         else{
-            statePomodoroLCD = 2; // SHORT BREAK
+            statePomodoroLCD = 1; // SHORT BREAK
             minutes = shortBreakTime; 
         } 
     }

@@ -6,12 +6,15 @@
 #include <EEPROM.h>
 #include <TM1637Display.h>
 
-//DEPENDENCIAS WIFI
-#include <WebServer.h>
+//LIBRERIAS WIFI
 #include <WiFi.h>
-#include <DNSServer.h>
 #include <WebSocketsServer.h>
 #include <WiFiManager.h>
+#include <AsyncTCP.h>
+#include <ESPAsyncWebServer.h>
+#include <Adafruit_Sensor.h>
+#include <DHT.h>
+#include <DHT_U.h>
 
 //LIBRERIAS LOCALES
 #include "button.h"
@@ -20,10 +23,18 @@
 #include "incLib.h"
 #include "twoStates.h"
 #include "incLibOne.h"
+#include "alarmsLib.h"
 
 void hour(); 
 void alarms();
 void lcdStandard();
+
+void menu(); 
+void deleteSSID(); 
+void seeAlarms(); 
+void exit_menu(); 
+
+void alarmsMenu(); 
 
 void pomodoro();
 void pomo_menu();
@@ -45,21 +56,86 @@ void work_or_break();
 void pomodoro_timer();
 void pause_pomodoro(); 
 
-byte firstON; 
+//DUAL CORE
+TaskHandle_t Task2;
 
-IPAddress ip;
-String wifi;
+//VARIABLES ALARMAS
+const char* HOUR_ALARM = "a_hour";
+const char* MIN_ALARM = "a_min";
+const char* PARAM_BUTTON1 = "state";
+const char* PARAM_BUTTON2 = "state";
+const char* PARAM_ALARM = "alarm";
+String inputMessage;//alarma hora
+String inputMessage2;//alarma minuto
+String inputMessage3;//alarma
+String buttonMessage1;//set
+String buttonMessage2;//reset
+int h = 0; //se almacenan datos de las horas.
+int m = 0; //se almacenan datos de los minutos.
+int b1 = 0;
+int alarma = 0;
 
-WebServer server(80);
-WebSocketsServer webSocket = WebSocketsServer(81);
+String inputParam; //variable común
 
+//VARIABLES HORA
+const char* PARAM_HORA = "t_hour";
+const char* PARAM_MIN = "t_min";
+const char* PARAM_SET = "set-time1";
+String inputMessage4;//hora
+String inputMessage5;//minuto
+String buttonMessage3;//set
+int h_time = 0;
+int m_time = 0;
+int set_time = 0;
+byte hourRTC; 
+byte minutesRTC; 
+
+//variables sensor dht11 (humedad y temperatura)
+String JSONtxt; //se almacenan los valores de temperatura y humedad.
+DHT dht(18, DHT11); //Definimos el pin del DHT11
+//variables de codigo DHT11 INUTILES
+#define LED 2
+boolean LEDonoff=false;
+//lecturas DHT11
+float temperature; 
+float humidity;
+
+
+//ASIGNACIÓN PINES
+//7SEGM.
 #define CLK 16				
 #define DIO 17		
-
-#define buzzerPin 18
+//BUZZER Y SWITCH
+#define buzzerPin 32
 #define pomoSwitch 33
 
+//EEPROM
 #define EEPROM_SIZE 512
+
+
+
+// variables lcd standard
+byte lcdStandardState;
+byte settingsState;
+//menu
+byte position;
+
+//alarmas 
+byte hourAlarmOne; 
+byte minuteAlarmOne; 
+byte hourAlarmTwo;
+byte minuteAlarmTwo;
+byte hourAlarmThree;
+byte minuteAlarmThree;
+byte hourAlarmFour; 
+byte minuteAlarmFour; 
+byte alarmOFF;  
+byte stateAlarmOne; 
+byte stateAlarmTwo; 
+byte stateAlarmThree; 
+byte stateAlarmFour; 
+
+
 //pomodoro
 bool pomoSwitchRead;
 byte menuPosition;

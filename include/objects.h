@@ -12,13 +12,13 @@ blinkMenu blinkMenu2;
 blinkMenu blinkMenu3;
 
 //incLib 1
-incLibOne incLibSessions(18);
-incLibOne incLibLongBreakDelay(18);
+incLibOne incLibSessions(32);
+incLibOne incLibLongBreakDelay(32);
 
 // incLib 5
-incLib incLibWorkTime(18);
-incLib incLibShortBreak(18);
-incLib incLibLongBreak(18);
+incLib incLibWorkTime(32);
+incLib incLibShortBreak(32);
+incLib incLibLongBreak(32);
 
 //objetos work_or_break()
 twoStates workOrBreak; 
@@ -27,3 +27,13 @@ twoStates pausePom;
 
 //objetos timer()
 multitask pomoTimer; 
+multitask lectureTemp; 
+multitask alarmTone; 
+multitask alarmOnOff; 
+
+//objetos alarms()
+alarmsLib alarm_one; 
+alarmsLib alarm_two; 
+alarmsLib alarm_three; 
+alarmsLib alarm_four; 
+
