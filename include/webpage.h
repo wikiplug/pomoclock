@@ -277,13 +277,13 @@ p{
         margin-left: 105px;
     }
 .secciontoggleclima  #dynRectangle2
-      {
-        width:1px;
+    {
+        width:0px;
         height:12px;
         top: 9px;
-        background-color: rgb(0, 0, 0);
+        background-color:#000000;
         z-index: -1;
-        margin-top: 1px;
+        margin-top:1px;
         border: 2px solid black;
         margin-left: 105px;
     }
@@ -295,12 +295,37 @@ p{
 .secciontoggleclima    div.h1 {background-color: #fcfcfc; width: 700px; font-size: 24px; border-radius: 7px; color: hsl(0, 0%, 0%); height: 280px;}
 
 
+.secciontoggledate {
+    background-color: #fcfcfc;
+    font-size: 24px; 
+    border-radius: 7px; 
+    color: hsl(0, 0%, 0%); 
+    height: 140px;
+    width: 700px;
+    margin-top: 50px;
+    align-items: center;
+    text-align: center;
+    margin-left: 600px;
+}
+
+.submit {
+    background-color:   rgb(125, 137, 147);
+    border-color:  #cdbfbfd6;
+    color: rgb(0, 0, 0);
+    width: 155px;
+    height: 35px;
+    border-radius: 5px;
+    font-size: 18px;
+    font-weight:500;
+    margin: 10px;
+}
+
 .secciontoggletime .time-display1{
     background-color: #fcfcfc;
     font-size: 24px; 
     border-radius: 7px; 
     color: hsl(0, 0%, 0%); 
-    height: 170px;
+    height: 150px;
     width: 700px;
     margin-top: 50px;
     align-items: center;
@@ -346,7 +371,7 @@ p{
     align-content: center;
     background: #ffffff;
     width: 700px;
-    height: 350px;
+    height: 310px;
     border-radius: 7px;
     padding-left: 5px;
     padding-right: 5px; 
@@ -416,7 +441,7 @@ p{
 
 }
 
-.secciontogglealarma .set-alarm-field .alarm{
+.secciontogglealarma .set-alarm-field .alarma{
     margin-top: 10px;
     height: 25px;
     width: 75px;
@@ -529,6 +554,20 @@ p{
                 <div id="dynRectangle2"></div><br>
             </h3>
 
+        </div>
+        
+    </section>
+
+    <section class="secciontoggledate" id="secciontoggle">
+        <form class= "fecha" action="fecha" method="get"> 
+            <label class="date-heading1"><h3>Pomoclock - FECHA</h3><label><br>
+                <div class="set-time2">
+                    <input class="dia" type="number" name="dia" id="dia" placeholder="Día" max="31" min="1">
+                    <input class="mes" type="number" name="mes" id="mes" placeholder="Mes" max="12" min="1">
+                    <input class="año" type="number" name="año" id="año" placeholder="Año" max="2100" min="2000">
+		    <button type="submit" value="submit" class="submit" name="submit">Setear</button>
+                </div>
+            </form> 
         </div>
         
     </section>

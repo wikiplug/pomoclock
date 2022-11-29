@@ -56,17 +56,6 @@ void work_or_break();
 void pomodoro_timer();
 void pause_pomodoro(); 
 
-//config date
-void configDate(); 
-void configDay();
-void configMonth(); 
-void configYear(); 
-void exitConfigDate();  
-void configDateOption(); 
-int dayConfig;
-int monthConfig; 
-int yearConfig; 
-
 //DUAL CORE
 TaskHandle_t Task2;
 
@@ -98,8 +87,23 @@ String buttonMessage3;//set
 int h_time = 0;
 int m_time = 0;
 int set_time = 0;
-byte hourRTC; 
-byte minutesRTC; 
+int hourRTC; 
+int minutesRTC; 
+int secondsRTC; 
+
+// VARIABLES FECHA
+const char* PARAM_DIA = "dia";
+const char* PARAM_MES = "mes";
+const char* PARAM_ANO = "año";
+String inputMessage6;//DIA
+String inputMessage7;//MES
+String inputMessage8;//AÑO
+int f_dia = 0;
+int f_mes = 0;
+int f_ano = 0;
+int day;
+int month; 
+int year; 
 
 //variables sensor dht11 (humedad y temperatura)
 String JSONtxt; //se almacenan los valores de temperatura y humedad.
@@ -145,11 +149,6 @@ byte stateAlarmOne;
 byte stateAlarmTwo; 
 byte stateAlarmThree; 
 byte stateAlarmFour; 
-
-
-//config date
-byte configDateState; 
-
 
 //pomodoro
 bool pomoSwitchRead;

@@ -64,7 +64,7 @@ void hora_pagina()
     EEPROM.write(20, m_time);
     EEPROM.commit();
     
-    rtc.adjust(DateTime(yearConfig, monthConfig, dayConfig, h_time, m_time, 00));
+    rtc.adjust(DateTime(year, month, day, h_time, m_time, 00));
     });
 }
 
@@ -108,6 +108,30 @@ void alarmas_pagina () {
     });
 }
 
+void fecha_pagina () {
+  server.on ("/fecha", HTTP_GET, [](AsyncWebServerRequest * request) {
+    if (request->hasParam(PARAM_DIA)) {
+      inputMessage6 = request->getParam(PARAM_DIA)->value();//OBTENEMOS VALOR HORA
+      inputParam = PARAM_DIA;
+    }
+    if (request->hasParam(PARAM_MES)) {
+      inputMessage7 = request->getParam(PARAM_MES)->value();//OBTENEMOS VALOR HORA
+      inputParam = PARAM_MES;
+    }
+    if (request->hasParam(PARAM_ANO)) {
+      inputMessage8 = request->getParam(PARAM_ANO)->value();//OBTENEMOS VALOR HORA
+      inputParam = PARAM_ANO;
+    }
+
+    request->send(200, "text/html", pomoclock);//REDIRECCIÓN A LA PÁGINA PRINCIPAL
+
+    //-------------------------------CONVERSIÓN A VALORES EN INT------------------------------------------------
+    f_dia = inputMessage6.toInt(); f_mes = inputMessage7.toInt(); f_ano = inputMessage8.toInt();
+    //----------------------------IMPRIMIR VALORES EN LCD---------------------------------------------------
+
+    rtc.adjust(DateTime(f_ano, f_mes, f_dia, hourRTC, minutesRTC, secondsRTC));
+  });
+}
 
 //CDIGO SEMI-INUTIL
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t *payload, size_t welength)
@@ -176,6 +200,7 @@ void setupWiFi(){
         server.on("/", handleRoot);
         hora_pagina(); // función dedicado a imprimir el valor del tiempo
         alarmas_pagina(); //función dedicado a imprimir el valor de las alarmas
+        fecha_pagina();
         server.begin(); 
         webSocket.begin();
         webSocket.onEvent(webSocketEvent);
@@ -238,23 +263,18 @@ void setup(){
     minuteAlarmFour = EEPROM.read(14);
     stateAlarmFour = EEPROM.read(15);  
 
-    dayConfig = EEPROM.read(16);
-    monthConfig = EEPROM.read(17); 
-    yearConfig = EEPROM.read(18);
+    f_dia = EEPROM.read(16);
+    f_mes = EEPROM.read(17);
+    f_ano = EEPROM.read(18); 
 
     h_time = EEPROM.read(19);
     m_time = EEPROM.read(20);
-    //DHT 11 (SENSOR DE TEMPERATURA)
-    // pinMode(humLED, OUTPUT);
-    // pinMode(SW, INPUT);
     
-    dht.begin();
-
-    if (! rtc.begin()) {				// si falla la inicializacion del modulo
+    if(! rtc.begin()) {				// si falla la inicializacion del modulo
         Serial.println("Modulo RTC no encontrado !");	// muestra mensaje de error
         while (1);					// bucle infinito que detiene ejecucion del programa
     }
-    
+    dht.begin();
     display.setBrightness(1);
 
     lcd.begin(20, 4);      //Iniciamos el lcd
@@ -300,10 +320,7 @@ void loop(){
     if(alarmsMenuState == true){
         alarmsMenu(); 
     }
-    if(configDateState == true){
-        configDate(); 
-    }
-    if(pomoSwitchRead == LOW && alarmsMenuState == false && configDateState == false){
+    if(pomoSwitchRead == LOW && alarmsMenuState == false){
         lcdStandard(); 
     }
     else{
@@ -320,13 +337,12 @@ void hour(){
     DateTime fecha = rtc.now();
     hourRTC = fecha.hour();
     minutesRTC = fecha.minute(); 
+    secondsRTC = fecha.second(); 
 
     display.showNumberDecEx(hourRTC, 0b01000000, true, 2, 0); 
     display.showNumberDec(minutesRTC, true, 2, 2); 
-
-    
 }
- 
+
 void lcdStandard(){
     if(button_2.getState() || settingsState == true){
         menuCleaner = true; 
@@ -356,18 +372,22 @@ void lcdStandard(){
         lcd.print("%");  
 
         DateTime fecha = rtc.now();
+        day = fecha.day(); 
+        month = fecha.month(); 
+        year = fecha.year(); 
+
         lcd.setCursor(10, 0);
-        if(fecha.day() < 10){
+        if(day < 10){
             lcd.print("0");  
         }
-        lcd.print(fecha.day()); 
+        lcd.print(day); 
         lcd.print("/");
-        if(fecha.month() < 10){
+        if(month < 10){
             lcd.print("0");
         }
-        lcd.print(fecha.month());
+        lcd.print(month);
         lcd.print("/");
-        lcd.print(fecha.year());
+        lcd.print(year);
         lcd.setCursor(0, 3);
         lcd.print("IP: "); 
         lcd.print(ip);
@@ -379,7 +399,7 @@ void menu(){
     if(button_3.getState()){ 
         tone(buzzerPin, 1000, 100); 
         position++;  
-        if(position > 3){
+        if(position > 2){
             position = 0; 
         }
         lcd.clear();
@@ -393,11 +413,8 @@ void menu(){
             seeAlarms();
             break; 
         case 2:
-            configDateOption();  
+            exit_menu();   
             break; 
-        case 3: 
-            exit_menu();
-            break;
     }
 }
 
@@ -409,9 +426,7 @@ void menu_display(){
     lcd.setCursor(2, 1); 
     lcd.print("show alarms.");
     lcd.setCursor(2, 2); 
-    lcd.print("config date.");
-    lcd.setCursor(2, 3);
-    lcd.print("exit.");
+    lcd.print("exit."); 
 }
 
 void deleteSSID(){
@@ -437,15 +452,6 @@ void seeAlarms(){
     }
 }
 
-void configDateOption(){
-    menu_display();
-    if(button_1.getState()){
-        lcd.clear();
-        delay(200);
-        configDateState = true; 
-    }
-}
-
 void exit_menu(){
     menu_display(); 
     if(button_1.getState()){
@@ -460,42 +466,42 @@ void alarmsMenu(){
     lcd.setCursor(0, 0); 
     lcd.print("h: "); 
     lcd.print(hourAlarmOne);
-    lcd.setCursor(5, 0); 
+    lcd.setCursor(7, 0); 
     lcd.print("m: ");
     lcd.print(minuteAlarmOne);
-    lcd.setCursor(11, 0); 
-    lcd.print("state: ");
+    lcd.setCursor(13, 0); 
+    lcd.print("s: ");
     lcd.print(stateAlarmOne); 
 
     lcd.setCursor(0, 1); 
     lcd.print("h: "); 
     lcd.print(hourAlarmTwo);
-    lcd.setCursor(5, 1); 
+    lcd.setCursor(7, 1); 
     lcd.print("m: ");
     lcd.print(minuteAlarmTwo);
-    lcd.setCursor(11, 1); 
-    lcd.print("state: ");
+    lcd.setCursor(13, 1); 
+    lcd.print("s: ");
     lcd.print(stateAlarmTwo);
 
 
     lcd.setCursor(0, 2); 
     lcd.print("h: "); 
     lcd.print(hourAlarmThree);
-    lcd.setCursor(5, 2); 
+    lcd.setCursor(7, 2); 
     lcd.print("m: ");
     lcd.print(minuteAlarmThree);
-    lcd.setCursor(11, 2); 
-    lcd.print("state: ");
+    lcd.setCursor(13, 2); 
+    lcd.print("s: ");
     lcd.print(stateAlarmThree);
 
     lcd.setCursor(0, 3); 
     lcd.print("h: "); 
     lcd.print(hourAlarmFour);
-    lcd.setCursor(5, 3); 
+    lcd.setCursor(7, 3); 
     lcd.print("m: ");
     lcd.print(minuteAlarmFour);
-    lcd.setCursor(11, 3); 
-    lcd.print("state: ");
+    lcd.setCursor(13, 3); 
+    lcd.print("s: ");
     lcd.print(stateAlarmFour);
 
     if(button_3.getState()){
@@ -595,108 +601,12 @@ void alarms(){
     alarm_four.alarmTriggered();
 }
 
-byte configDatePosition;
-void configDate(){
-    if(button_3.getState()){
-        configDatePosition++;
-        lcd.clear(); 
-        if(configDatePosition > 3){
-            configDatePosition = 0;
-        }
-    }
-
-    switch (configDatePosition)
-    {
-    case 0:
-        configDay(); 
-        break;
-    
-    case 1:
-        configMonth();
-        break;
-    
-    case 2:
-        configYear();
-        break; 
-    
-    case 3: 
-        exitConfigDate();
-        break;    
-    }
-}
-
-void configDateDisplay(){
-    lcd.setCursor(0, configDatePosition);
-    lcd.print("-");
-    lcd.setCursor(2, 0);
-    lcd.print("day: ");
-    lcd.print(dayConfig);
-    lcd.setCursor(2, 1);
-    lcd.print("month: "); 
-    lcd.print(monthConfig); 
-    lcd.setCursor(2, 2);
-    lcd.print("year: "); 
-    lcd.print(2000 + yearConfig);
-    lcd.setCursor(2, 3);
-    lcd.print("exit."); 
-}
-
-
-
-void configDay(){
-    incLibConfigDay.incThisVar(dayConfig, 31); 
-    if(incLibConfigDay.lcdValue()){
-        lcd.clear();
-    }
-    dayConfig = incLibConfigDay.varValue();
-    configDateDisplay(); 
-}
-
-void configMonth(){
-    incLibConfigMonth.incThisVar(monthConfig, 12);
-    if(incLibConfigMonth.lcdValue()){
-        lcd.clear();
-    }
-    monthConfig = incLibConfigMonth.varValue();
-    configDateDisplay(); 
-}
-
-void configYear(){
-    incLibConfigYear.incThisVar(yearConfig, 999); 
-    if(incLibConfigYear.lcdValue()){
-        lcd.clear();
-    }
-    yearConfig = incLibConfigYear.varValue();
-    configDateDisplay(); 
-}
-
-
-void exitConfigDate(){
-    configDateDisplay(); 
-    if(button_1.getState()){
-        //actualiza los datos de la fecha.
-        rtc.adjust(DateTime(2000 + yearConfig, monthConfig, dayConfig, h_time, m_time, 00));
-        configDateState = false; 
-        EEPROM.write(dayConfig, 16);
-        EEPROM.commit();
-        EEPROM.write(monthConfig, 17);
-        EEPROM.commit(); 
-        EEPROM.write(yearConfig, 18);
-        EEPROM.commit(); 
-        lcd.clear();
-        delay(250);
-    }
-}
 // EN ESTA FUNCIÓN SE CORROBORA SI SE ACTIVA LA OPCION POMODORO O NO
 // A SU VEZ, EJECUTA TODAS LAS FUNCIONES QUE CORREN DENTRO DEL POMODORO
 // SE SEGMENTA EL CODIGO EN BLOQUES PARA FACILITAR SU LEGIBILIDAD Y PROGRAMACION
 void pomodoro(){ 
     pomoSwitchRead = digitalRead(pomoSwitch);
     if(pomoSwitchRead == HIGH){ 
-        if(configDateState == true){
-            lcd.clear(); 
-            configDateState = false; 
-        }
         if(alarmsMenuState == true){
             lcd.clear(); 
             alarmsMenuState = false;
@@ -717,6 +627,7 @@ void pomodoro(){
             if(button_3.getState()){
                 lcd.clear();
                 pause_pomodoro();  
+                tone(buzzerPin, 1000, 100);
             }
             if(startPomo == true && pausePomodoro == false){
                 pomodoro_timer(); //temporizador
@@ -901,12 +812,16 @@ void pomo_settings_display1(){
 }
 
 void pomo_settings_display2(){
-    lcd.setCursor(0, settingsPosition-3);
+    lcd.setCursor(0, settingsPosition-2);
     lcd.print("- ");
     lcd.setCursor(2, 0);
+    lcd.print("longBreak: "); 
+    lcd.print(longBreakTime); 
+    lcd.print("min."); 
+    lcd.setCursor(2, 1);
     lcd.print("longBreakDelay: ");
     lcd.print(longBreakDelay);
-    lcd.setCursor(2, 1);
+    lcd.setCursor(2, 2);
     lcd.print("exit & save"); 
 }
  
@@ -934,7 +849,7 @@ void select_longBreak(){
         lcd.clear(); 
     }
     longBreakTime = incLibLongBreak.varValue();
-    pomo_settings_display1(); 
+    pomo_settings_display2(); 
 }
 
 void select_longBreakDelay(){
@@ -1035,6 +950,7 @@ void pomodoro_timer(){
     }
     // si el tiempo termina actualiza el estado de pomodoro
     if(minutes == 0 && seconds == 0){
+        tone(buzzerPin, 1000, 3000);
         pomodoroCountFinish = true; 
         if(statePomodoro == false){
             sessionFinish = true; 
